@@ -18,7 +18,7 @@ extra-source-files:  CHANGELOG.md
 
 executable calculator
   main-is:             Main.hs
-  -- other-modules:
+  other-modules:       Parser
   -- other-extensions:
   build-depends:       base ^>=4.11.1.0,
                        parsec ^>=3.1.13.0,
