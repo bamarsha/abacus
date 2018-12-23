@@ -7,6 +7,8 @@ import Text.Parsec.Expr
 import Text.Parsec.Language
 import Text.Parsec.Token
 
+import System.Console.Haskeline
+
 -- The math token parser.
 math :: GenTokenParser String u Identity
 math = makeTokenParser mathDef
@@ -58,6 +60,7 @@ term = parens math expression <|>
 number :: ParsecT String u Identity Double
 number = alwaysFloat <$> (naturalOrFloat math)
   where
+    alwaysFloat :: Either Integer Double -> Double
     alwaysFloat (Left n) = fromIntegral n
     alwaysFloat (Right f) = f
 
@@ -68,5 +71,16 @@ input = do
   eof
   return e
 
+-- Runs a read-eval-print-loop for the calculator.
 main :: IO ()
-main = putStrLn "Hello, Haskell!"
+main = runInputT defaultSettings loop
+  where
+    loop :: InputT IO ()
+    loop = do
+      maybeLine <- getInputLine "= "
+      case maybeLine of
+        Nothing -> return ()
+        Just line -> (case parse input "" line of
+                        Left error -> outputStrLn (show error)
+                        Right result -> outputStrLn (show result)) >>
+                     loop
