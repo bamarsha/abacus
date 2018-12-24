@@ -14,8 +14,7 @@ data Expression = Raise Expression Expression  -- (base exponent)
                 | Divide Expression Expression
                 | Add Expression Expression
                 | Subtract Expression Expression
-                | Call String Expression  -- (name argument)
-                | Variable String  -- (name)
+                | Call String (Maybe Expression)  -- (name argument)
                 | Number Double
   deriving Show
 
@@ -64,7 +63,7 @@ table =
 term :: ParsecT String u Identity Expression
 term = parens math expression <|>
        number <|>
-       callOrVariable
+       call
 
 -- The parser for numbers in a term. It accepts both naturals and floats, but
 -- naturals are converted to floats.
@@ -75,13 +74,11 @@ number = alwaysFloat <$> (naturalOrFloat math)
     alwaysFloat (Left n) = Number (fromIntegral n)
     alwaysFloat (Right f) = Number f
 
--- The parser for a function call or variable name.
-callOrVariable = do
+-- The parser for a function call.
+call = do
   name <- identifier math
   maybeArgument <- optionMaybe (parens math expression)
-  case maybeArgument of
-    Nothing -> return (Variable name)
-    Just argument -> return (Call name argument)
+  return (Call name maybeArgument)
 
 -- The parser for a complete string of input.
 input :: ParsecT String u Identity Expression
