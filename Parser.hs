@@ -14,13 +14,13 @@ data Expression = Raise Expression Expression
                 | Divide Expression Expression
                 | Add Expression Expression
                 | Subtract Expression Expression
-                | Call String (Maybe Expression)
+                | Call String [Expression]
                 | Number Double
   deriving Show
 
 -- A math statement can be either an expression or a function definition.
 data Statement = Expression Expression
-               | Definition String (Maybe String) Expression
+               | Definition String [String] Expression
   deriving Show
 
 -- The math token parser.
@@ -79,21 +79,30 @@ number = alwaysFloat <$> (naturalOrFloat math)
     alwaysFloat (Left n) = Number (fromIntegral n)
     alwaysFloat (Right f) = Number f
 
+-- The parser for lists. It tries to apply the given parser until it fails, with
+-- each application of the parser separated by a comma. The list fails if there
+-- isn't at least one element.
+list :: ParsecT String u Identity a -> ParsecT String u Identity [a]
+list parser = do
+  head <- parser
+  tail <- option [] (reservedOp math "," >> list parser)
+  return (head : tail)
+
 -- The parser for a function call.
 call :: ParsecT String u Identity Expression
 call = do
   name <- identifier math
-  maybeArgument <- optionMaybe (parens math expression)
-  return (Call name maybeArgument)
+  arguments <- option [] (parens math (list expression))
+  return (Call name arguments)
 
 -- The parser for a function definition.
 definition :: ParsecT String u Identity Statement
 definition = do
   name <- identifier math
-  maybeParameter <- optionMaybe (parens math (identifier math))
+  parameters <- option [] (parens math (list (identifier math)))
   reservedOp math "="
   e <- expression
-  return (Definition name maybeParameter e)
+  return (Definition name parameters e)
 
 -- The parser for a statement.
 statement :: ParsecT String u Identity Statement
