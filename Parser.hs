@@ -8,14 +8,19 @@ import Text.Parsec.Language
 import Text.Parsec.Token
 
 -- A math expression.
-data Expression = Raise Expression Expression  -- (base exponent)
+data Expression = Raise Expression Expression
                 | Negate Expression
                 | Multiply Expression Expression
                 | Divide Expression Expression
                 | Add Expression Expression
                 | Subtract Expression Expression
-                | Call String (Maybe Expression)  -- (name argument)
+                | Call String (Maybe Expression)
                 | Number Double
+  deriving Show
+
+-- A math statement can be either an expression or a function definition.
+data Statement = Expression Expression
+               | Definition String (Maybe String) Expression
   deriving Show
 
 -- The math token parser.
@@ -26,7 +31,7 @@ math = makeTokenParser mathDef
 mathDef :: GenLanguageDef String u Identity
 mathDef = emptyDef { opStart = empty,
                      opLetter = empty,
-                     reservedOpNames = ["+", "-", "*", "/", "^"] }
+                     reservedOpNames = ["+", "-", "*", "/", "^", "="] }
 
 -- The expression parser.
 expression :: ParsecT String u Identity Expression
@@ -75,19 +80,35 @@ number = alwaysFloat <$> (naturalOrFloat math)
     alwaysFloat (Right f) = Number f
 
 -- The parser for a function call.
+call :: ParsecT String u Identity Expression
 call = do
   name <- identifier math
   maybeArgument <- optionMaybe (parens math expression)
   return (Call name maybeArgument)
 
--- The parser for a complete string of input.
-input :: ParsecT String u Identity Expression
-input = do
+-- The parser for a function definition.
+definition :: ParsecT String u Identity Statement
+definition = do
+  name <- identifier math
+  maybeParameter <- optionMaybe (parens math (identifier math))
+  reservedOp math "="
   e <- expression
-  eof
-  return e
+  return (Definition name maybeParameter e)
 
--- Parses a string of math and returns either a ParseError (Left) or an
--- Expression that is the result of parsing the string (Right).
-parseMath :: String -> Either ParseError Expression
+-- The parser for a statement.
+statement :: ParsecT String u Identity Statement
+statement =
+  (try definition) <|>
+  (expression >>= return . Expression)
+
+-- The parser for a complete string of input.
+input :: ParsecT String u Identity Statement
+input = do
+  s <- statement
+  eof
+  return s
+
+-- Parses a string of math and returns either a ParseError (Left) or a Statement
+-- that is the result of parsing the string (Right).
+parseMath :: String -> Either ParseError Statement
 parseMath string = parse input "" string
