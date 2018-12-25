@@ -3,6 +3,10 @@ module Main (main) where
 import AST
 import Interpreter
 import Parser
+
+import Data.Text.Format (shortest)
+import Data.Text.Lazy (unpack)
+import Data.Text.Lazy.Builder (toLazyText)
 import System.Console.Haskeline
 
 -- Runs a read-eval-print loop for the calculator.
@@ -25,5 +29,7 @@ loop env = do
     evaluateLine line =
       case evaluate env line of
         Left error -> outputStrLn error >> loop env
-        Right (Just n, env') -> outputStrLn (show n) >> loop env'
+        Right (Just n, env') ->
+          (outputStrLn $ unpack $ toLazyText $ shortest n) >>
+          loop env'
         Right (Nothing, env') -> loop env'
