@@ -16,14 +16,25 @@ maintainer:          marshallsaraha@gmail.com
 category:            Math
 extra-source-files:  CHANGELOG.md
 
-executable calculator
-  main-is:             Main.hs
+common modules
   other-modules:       AST, Interpreter, Parser
-  -- other-extensions:
   build-depends:       base ^>=4.11.1.0,
-                       haskeline ^>=0.7.4.3,
-                       parsec ^>=3.1.13.0,
+                       parsec ^>=3.1.13.0
+  default-language:    Haskell2010
+
+executable calculator
+  import:              modules
+  main-is:             Main.hs
+  -- other-extensions:
+  build-depends:       haskeline ^>=0.7.4.3,
                        text ^>=1.2.3.1,
                        text-format ^>=0.3.2
   -- hs-source-dirs:
-  default-language:    Haskell2010
+
+executable calculator-gui
+  import:              modules
+  main-is:             GUI.hs
+  build-depends:       text ^>=1.2.3.1,
+                       text-format ^>=0.3.2,
+                       threepenny-gui ^>=0.8.3.0
+  ghc-options:         -main-is GUI
