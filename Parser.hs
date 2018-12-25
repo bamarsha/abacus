@@ -1,27 +1,12 @@
-module Parser (parseMath) where
+module Parser (Parser.parse) where
 
+import AST
 import Control.Applicative (empty)
 import Data.Functor.Identity (Identity)
 import Text.Parsec
 import Text.Parsec.Expr
 import Text.Parsec.Language
 import Text.Parsec.Token
-
--- A math expression.
-data Expression = Raise Expression Expression
-                | Negate Expression
-                | Multiply Expression Expression
-                | Divide Expression Expression
-                | Add Expression Expression
-                | Subtract Expression Expression
-                | Call String [Expression]
-                | Number Double
-  deriving Show
-
--- A math statement can be either an expression or a function definition.
-data Statement = Expression Expression
-               | Definition String [String] Expression
-  deriving Show
 
 -- The math token parser.
 math :: GenTokenParser String u Identity
@@ -95,19 +80,19 @@ call = do
   arguments <- option [] (parens math (list expression))
   return (Call name arguments)
 
--- The parser for a function definition.
-definition :: ParsecT String u Identity Statement
-definition = do
+-- The parser for a function binding.
+binding :: ParsecT String u Identity Statement
+binding = do
   name <- identifier math
   parameters <- option [] (parens math (list (identifier math)))
   reservedOp math "="
   e <- expression
-  return (Definition name parameters e)
+  return (Binding name parameters e)
 
 -- The parser for a statement.
 statement :: ParsecT String u Identity Statement
 statement =
-  (try definition) <|>
+  (try binding) <|>
   (expression >>= return . Expression)
 
 -- The parser for a complete string of input.
@@ -119,5 +104,5 @@ input = do
 
 -- Parses a string of math and returns either a ParseError (Left) or a Statement
 -- that is the result of parsing the string (Right).
-parseMath :: String -> Either ParseError Statement
-parseMath string = parse input "" string
+parse :: String -> Either ParseError Statement
+parse string = Text.Parsec.parse input "" string

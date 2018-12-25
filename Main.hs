@@ -1,18 +1,29 @@
 module Main (main) where
 
+import AST
+import Interpreter
 import Parser
 import System.Console.Haskeline
 
--- Runs a read-eval-print-loop for the calculator.
+-- Runs a read-eval-print loop for the calculator.
 main :: IO ()
-main = runInputT defaultSettings loop
+main = runInputT defaultSettings (loop empty)
+
+-- The read-eval-print loop.
+loop :: Environment -> InputT IO ()
+loop env = do
+  maybeLine <- getInputLine "= "
+  maybe (return ()) parseLine maybeLine
   where
-    loop :: InputT IO ()
-    loop = do
-      maybeLine <- getInputLine "= "
-      case maybeLine of
-        Nothing -> return ()
-        Just line -> (case parseMath line of
-                        Left error -> outputStrLn (show error)
-                        Right result -> outputStrLn (show result)) >>
-                     loop
+    parseLine :: String -> InputT IO ()
+    parseLine line =
+      case parse line of
+        Left error -> outputStrLn (show error) >> loop env
+        Right result -> evaluateLine result
+
+    evaluateLine :: Statement -> InputT IO ()
+    evaluateLine line =
+      case evaluate env line of
+        Left error -> outputStrLn error >> loop env
+        Right (Just n, env') -> outputStrLn (show n) >> loop env'
+        Right (Nothing, env') -> loop env'
