@@ -17,24 +17,26 @@ category:            Math
 extra-source-files:  CHANGELOG.md
 
 common modules
-  other-modules:       AST, Interpreter, Parser
+  other-modules:       Calculator.AST,
+                       Calculator.Interpreter,
+                       Calculator.Parser
   build-depends:       base ^>=4.11.1.0,
                        parsec ^>=3.1.13.0
   default-language:    Haskell2010
+  hs-source-dirs:      src
 
-executable calculator
+executable calculator-console
   import:              modules
-  main-is:             Main.hs
-  -- other-extensions:
+  main-is:             Calculator/Console/Main.hs
   build-depends:       haskeline ^>=0.7.4.3,
                        text ^>=1.2.3.1,
                        text-format ^>=0.3.2
-  -- hs-source-dirs:
+  ghc-options:         -main-is Calculator.Console.Main
 
-executable calculator-gui
+executable calculator-web
   import:              modules
-  main-is:             GUI.hs
+  main-is:             Calculator/Web/Main.hs
   build-depends:       text ^>=1.2.3.1,
                        text-format ^>=0.3.2,
                        threepenny-gui ^>=0.8.3.0
-  ghc-options:         -main-is GUI
+  ghc-options:         -main-is Calculator.Web.Main

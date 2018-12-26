@@ -1,6 +1,6 @@
-module Parser (Parser.parse) where
+module Calculator.Parser (Calculator.Parser.parse) where
 
-import AST
+import Calculator.AST
 import Control.Applicative (empty)
 import Data.Functor.Identity (Identity)
 import Text.Parsec

@@ -1,3 +1,5 @@
+.DS_Store
+
 /.ghc.environment.*
 /cabal.project.local
 /dist-newstyle

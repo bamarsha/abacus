@@ -1,9 +1,8 @@
-module Main (main) where
+module Calculator.Console.Main (main) where
 
-import AST
-import Interpreter
-import Parser
-
+import Calculator.AST
+import Calculator.Interpreter
+import Calculator.Parser
 import Data.Text.Format (shortest)
 import Data.Text.Lazy (unpack)
 import Data.Text.Lazy.Builder (toLazyText)

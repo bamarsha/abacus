@@ -1,9 +1,8 @@
-module GUI (main) where
+module Calculator.Web.Main (main) where
 
-import AST
-import Interpreter
-import Parser
-
+import Calculator.AST
+import Calculator.Interpreter
+import Calculator.Parser
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.IORef
@@ -32,7 +31,7 @@ setup window = do
     #+ [UI.div #+ [element input],
         element error]
 
-  envRef <- liftIO $ newIORef Interpreter.empty
+  envRef <- liftIO $ newIORef Calculator.Interpreter.empty
 
   on UI.keydown input $ \key ->
     if key == enterKey
@@ -53,7 +52,7 @@ evaluateLine :: Environment -> String -> Either String (String, Environment)
 evaluateLine env line =
   case parse line of
     Left error -> Left (show error)
-    Right result ->
+    Right statement ->
       case evaluate env statement of
         Left error -> Left error
         Right (Just n, env') -> Right (unpack $ toLazyText $ shortest n, env')

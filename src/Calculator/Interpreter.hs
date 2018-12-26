@@ -1,6 +1,6 @@
-module Interpreter (Environment, empty, evaluate) where
+module Calculator.Interpreter (Environment, empty, evaluate) where
 
-import AST
+import Calculator.AST
 import Control.Monad (sequence)
 
 -- The context of an expression.
