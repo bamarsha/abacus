@@ -36,24 +36,18 @@ setup window = do
   on UI.keydown input $ \key ->
     if key == enterKey
     then do
-      line <- get UI.value input
       env <- liftIO $ readIORef envRef
+      line <- get UI.value input
 
-      case evaluateLine env line of
-        Left msg -> element error # set UI.text msg
-        Right (result, env') -> do liftIO $ modifyIORef envRef (const env')
-                                   element input # set UI.value result
-                                   element error # set UI.text ""
+      case eval env line of
+        Left error' -> element error # set UI.text (show error')
+        Right (Left error') -> element error # set UI.text error'
+        Right (Right (env', maybeResult)) -> do
+          liftIO $ modifyIORef envRef (const env')
+          element error # set UI.text ""
+
+          let input' = case maybeResult of
+                         Nothing -> ""
+                         Just result -> unpack $ toLazyText $ shortest result
+          element input # set UI.value input'
     else element input
-
--- Parses and evaluates a line. Returns either an error message (Left) or the
--- result with the new environment (Right).
-evaluateLine :: Environment -> String -> Either String (String, Environment)
-evaluateLine env line =
-  case parse line of
-    Left error -> Left (show error)
-    Right statement ->
-      case evaluate env statement of
-        Left error -> Left error
-        Right (Just n, env') -> Right (unpack $ toLazyText $ shortest n, env')
-        Right (Nothing, env') -> Right ("", env')

@@ -1,7 +1,9 @@
-module Calculator.Interpreter (Environment, empty, evaluate) where
+module Calculator.Interpreter (Environment, empty, eval) where
 
 import Calculator.AST
+import Calculator.Parser
 import Control.Monad (sequence)
+import Text.Parsec.Error (ParseError)
 
 -- The context of an expression.
 type Environment = [(String, Closure)]
@@ -10,7 +12,7 @@ type Environment = [(String, Closure)]
 data Closure = Closure Environment [String] Expression
 
 -- An evaluation error.
-type EvaluationError = String
+type EvalError = String
 
 -- The empty environment.
 empty :: Environment
@@ -21,29 +23,29 @@ constant :: Double -> Closure
 constant = Closure empty [] . Number
 
 -- Evaluates an expression with the given environment.
-evaluateE :: Environment -> Expression -> Either EvaluationError Double
-evaluateE env e =
-  case e of
+evalExpression :: Environment -> Expression -> Either EvalError Double
+evalExpression env exp =
+  case exp of
     Raise base exponent -> do
-      baseV <- evaluateE env base
-      exponentV <- evaluateE env exponent
-      Right (baseV ** exponentV)
-    Negate e -> evaluateE env e >>= (return . negate)
+      base' <- evalExpression env base
+      exponent' <- evalExpression env exponent
+      Right (base' ** exponent')
+    Negate e -> evalExpression env e >>= (return . negate)
     Multiply e1 e2 -> do
-      v1 <- evaluateE env e1
-      v2 <- evaluateE env e2
+      v1 <- evalExpression env e1
+      v2 <- evalExpression env e2
       Right (v1 * v2)
     Divide e1 e2 -> do
-      v1 <- evaluateE env e1
-      v2 <- evaluateE env e2
+      v1 <- evalExpression env e1
+      v2 <- evalExpression env e2
       Right (v1 / v2)
     Add e1 e2 -> do
-      v1 <- evaluateE env e1
-      v2 <- evaluateE env e2
+      v1 <- evalExpression env e1
+      v2 <- evalExpression env e2
       Right (v1 + v2)
     Subtract e1 e2 -> do
-      v1 <- evaluateE env e1
-      v2 <- evaluateE env e2
+      v1 <- evalExpression env e1
+      v2 <- evalExpression env e2
       Right (v1 - v2)
     Call name arguments -> do
       case lookup name env of
@@ -52,22 +54,31 @@ evaluateE env e =
           if (length arguments) /= (length parameters)
           then Left ("wrong number of arguments for function " ++ name)
           else do
-            argumentsV <- sequence (map (evaluateE env) arguments)
-            let env' = (zip parameters (map constant argumentsV)) ++ env
-            evaluateE env' e
+            arguments' <- sequence (map (evalExpression env) arguments)
+            let env' = (zip parameters (map constant arguments')) ++ env
+            evalExpression env' e
     Number n -> return n
 
--- Evaluates a statement with the given environment and returns the result, if
--- any, as well as the updated environment.
-evaluate :: Environment
-         -> Statement
-         -> Either EvaluationError (Maybe Double, Environment)
-evaluate env (Expression e) = do
-  result <- evaluateE env e
-  return (Just result, env)
-evaluate env (Binding name parameters e) =
+-- Evaluates a statement with the given environment. Returns the result, if any,
+-- and the new environment.
+evalStatement :: Environment
+              -> Statement
+              -> Either EvalError (Environment, Maybe Double)
+evalStatement env (Expression exp) = do
+  result <- evalExpression env exp
+  Right (env, Just result)
+evalStatement env (Binding name parameters e) =
   if null parameters
-  then do
-    result <- evaluateE env e
-    return (Just result, (name, constant result) : env)
-  else return (Nothing, (name, Closure env parameters e) : env)
+  then do result <- evalExpression env e
+          Right ((name, constant result) : env, Just result)
+  else Right ((name, Closure env parameters e) : env, Nothing)
+
+-- Evaluates a string with the given environment. Returns the result, if any,
+-- and the new environment.
+eval :: Environment
+     -> String
+     -> Either ParseError (Either EvalError (Environment, Maybe Double))
+eval env str =
+  case parse str of
+    Left error -> Left error
+    Right statement -> Right (evalStatement env statement)
