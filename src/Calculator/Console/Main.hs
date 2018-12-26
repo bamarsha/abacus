@@ -18,8 +18,8 @@ loop env = do
     Nothing -> return ()
     Just line ->
       case eval env line of
-        Left error -> outputStrLn (show error) >> loop env
-        Right (Left error) -> outputStrLn error >> loop env
+        Left parseError -> outputStrLn (show parseError) >> loop env
+        Right (Left evalError) -> outputStrLn evalError >> loop env
         Right (Right (env', Nothing)) -> loop env'
         Right (Right (env', Just result)) ->
           (outputStrLn $ unpack $ toLazyText $ shortest result) >> loop env'

@@ -1,6 +1,5 @@
 module Calculator.Web.Main (main) where
 
-import Calculator.AST
 import Calculator.Interpreter
 import Calculator.Parser
 import Control.Monad
@@ -31,23 +30,31 @@ setup window = do
     #+ [UI.div #+ [element input],
         element error]
 
-  envRef <- liftIO $ newIORef Calculator.Interpreter.empty
+  bInput <- stepper "" $ UI.valueChange input
+  let eSubmit = filterE (== enterKey) (UI.keydown input)
+  eEval <- accumE (Calculator.Interpreter.empty, Right Nothing) $
+    updateResult <$> (bInput <@ eSubmit)
 
-  on UI.keydown input $ \key ->
-    if key == enterKey
-    then do
-      env <- liftIO $ readIORef envRef
-      line <- get UI.value input
+  onEvent eEval $ \result ->
+    case result of
+      (_, Left errorMsg) -> element error # set UI.text errorMsg
+      (_, Right Nothing) -> do
+        element error # set UI.text ""
+        element input # set UI.value ""
+      (_, Right (Just value)) -> do
+        element error # set UI.text ""
+        element input # set UI.value (unpack $ toLazyText $ shortest value)
 
-      case eval env line of
-        Left error' -> element error # set UI.text (show error')
-        Right (Left error') -> element error # set UI.text error'
-        Right (Right (env', maybeResult)) -> do
-          liftIO $ modifyIORef envRef (const env')
-          element error # set UI.text ""
+  return ()
 
-          let input' = case maybeResult of
-                         Nothing -> ""
-                         Just result -> unpack $ toLazyText $ shortest result
-          element input # set UI.value input'
-    else element input
+-- Returns the result of evaluating the input using the environment from the
+-- previous result. The result contains the new environment and either an error
+-- message or the result value, if any.
+updateResult :: String
+             -> (Environment, Either String (Maybe Double))
+             -> (Environment, Either String (Maybe Double))
+updateResult input (env, _) =
+  case eval env input of
+    Left parseError -> (env, Left (show parseError))
+    Right (Left evalError) -> (env, Left evalError)
+    Right (Right (env', maybeValue)) -> (env', Right maybeValue)
