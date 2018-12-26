@@ -22,7 +22,7 @@ main = do
 -- Sets up the main window.
 setup :: Window -> UI ()
 setup window = do
-  return window # set UI.title "Calculator"
+  pure window # set UI.title "Calculator"
 
   input <- UI.input
   error <- UI.p
