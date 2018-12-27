@@ -1,9 +1,7 @@
 module Calculator.Console.Main (main) where
 
 import Calculator.Interpreter
-import Data.Text.Format (shortest)
-import Data.Text.Lazy (unpack)
-import Data.Text.Lazy.Builder (toLazyText)
+import Calculator.Utils
 import System.Console.Haskeline
 
 -- Runs a read-eval-print loop for the calculator.
@@ -21,5 +19,5 @@ loop env = do
         Left parseError -> outputStrLn (show parseError) >> loop env
         Right (Left evalError) -> outputStrLn evalError >> loop env
         Right (Right (env', Nothing)) -> loop env'
-        Right (Right (env', Just result)) ->
-          (outputStrLn $ unpack $ toLazyText $ shortest result) >> loop env'
+        Right (Right (env', Just result)) -> outputStrLn (showFloat result) >>
+                                             loop env'

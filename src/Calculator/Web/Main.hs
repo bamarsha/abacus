@@ -1,13 +1,14 @@
+{-# LANGUAGE RecursiveDo #-}
+
 module Calculator.Web.Main (main) where
 
 import Calculator.Interpreter
 import Calculator.Parser
+import Calculator.Utils
 import Control.Monad
 import Control.Monad.IO.Class
+import Data.Either.Combinators
 import Data.IORef
-import Data.Text.Format (shortest)
-import Data.Text.Lazy (unpack)
-import Data.Text.Lazy.Builder (toLazyText)
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core
 
@@ -16,12 +17,11 @@ enterKey = 13
 
 -- Starts the GUI for the calculator.
 main :: IO ()
-main = do
-  startGUI defaultConfig setup
+main = startGUI defaultConfig setup
 
 -- Sets up the main window.
 setup :: Window -> UI ()
-setup window = void $ do
+setup window = void $ mdo
   pure window # set UI.title "Calculator"
 
   input <- UI.input
@@ -30,20 +30,24 @@ setup window = void $ do
     #+ [UI.div #+ [element input],
         element error]
 
-  bInput <- stepper "" $ UI.valueChange input
+  -- Evaluate the input when the Enter key is pressed.
   let eSubmit = filterE (== enterKey) (UI.keydown input)
   eEval <- accumE (Calculator.Interpreter.empty, Right Nothing) $
     updateResult <$> (bInput <@ eSubmit)
 
-  onEvent eEval $ \result ->
-    case result of
-      (_, Left errorMsg) -> element error # set UI.text errorMsg
-      (_, Right Nothing) -> do
-        element error # set UI.text ""
-        element input # set UI.value ""
-      (_, Right (Just value)) -> do
-        element error # set UI.text ""
-        element input # set UI.value (unpack $ toLazyText $ shortest value)
+  -- Update the input with the value of the result after evaluating (if there
+  -- wasn't an error).
+  let eEvalValue = filterJust $ (rightToMaybe . snd) <$> eEval
+  bInput <- stepper "" $ unionWith const
+    (maybe "" showFloat <$> eEvalValue)
+    (UI.valueChange input)
+
+  -- Show the last error message (if any).
+  let eEvalError = (fromLeft "" . snd) <$> eEval
+  bError <- stepper "" eEvalError
+
+  element input # sink value bInput
+  element error # sink text bError
 
 -- Returns the result of evaluating the input using the environment from the
 -- previous result. The result contains the new environment and either an error
