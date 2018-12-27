@@ -21,7 +21,7 @@ main = do
 
 -- Sets up the main window.
 setup :: Window -> UI ()
-setup window = do
+setup window = void $ do
   pure window # set UI.title "Calculator"
 
   input <- UI.input
@@ -44,8 +44,6 @@ setup window = do
       (_, Right (Just value)) -> do
         element error # set UI.text ""
         element input # set UI.value (unpack $ toLazyText $ shortest value)
-
-  return ()
 
 -- Returns the result of evaluating the input using the environment from the
 -- previous result. The result contains the new environment and either an error
