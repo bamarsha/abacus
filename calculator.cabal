@@ -38,5 +38,6 @@ executable calculator-web
   import:              modules
   main-is:             Calculator/Web/Main.hs
   build-depends:       either ^>=5.0.1,
+                       safe ^>=0.3.17,
                        threepenny-gui ^>=0.8.3.0
   ghc-options:         -main-is Calculator.Web.Main

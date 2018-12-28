@@ -1,0 +1,9 @@
+{
+  "name": "Calculator",
+  "main": "electron.js",
+  "dependencies": {
+    "electron": "^1.6.1",
+    "freeport": "^1.0.5",
+    "glob": "^7.1.3"
+  }
+}

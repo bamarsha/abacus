@@ -8,16 +8,20 @@ import Calculator.Utils
 import Control.Monad
 import Control.Monad.IO.Class
 import Data.Either.Combinators
-import Data.IORef
+import Data.Maybe (listToMaybe)
 import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core
+import System.Environment (getArgs)
 
 -- The keycode for the Enter key.
 enterKey = 13
 
 -- Starts the GUI for the calculator.
 main :: IO ()
-main = startGUI defaultConfig setup
+main = do
+  args <- getArgs
+  let port = read <$> listToMaybe args
+  startGUI defaultConfig { jsPort = port } setup
 
 -- Sets up the main window.
 setup :: Window -> UI ()
