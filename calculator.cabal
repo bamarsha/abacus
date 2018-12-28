@@ -30,14 +30,14 @@ common modules
 
 executable calculator-console
   import:              modules
-  main-is:             Calculator/Console/Main.hs
+  main-is:             Calculator/UI/Console.hs
   build-depends:       haskeline ^>=0.7.4.3
-  ghc-options:         -main-is Calculator.Console.Main
+  ghc-options:         -main-is Calculator.UI.Console
 
 executable calculator-web
   import:              modules
-  main-is:             Calculator/Web/Main.hs
+  main-is:             Calculator/UI/Web.hs
   build-depends:       either ^>=5.0.1,
                        safe ^>=0.3.17,
                        threepenny-gui ^>=0.8.3.0
-  ghc-options:         -main-is Calculator.Web.Main
+  ghc-options:         -main-is Calculator.UI.Web

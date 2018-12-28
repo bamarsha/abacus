@@ -1,6 +1,6 @@
 {-# LANGUAGE RecursiveDo #-}
 
-module Calculator.Web.Main (main) where
+module Calculator.UI.Web (main) where
 
 import Calculator.Interpreter
 import Calculator.Parser

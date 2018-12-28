@@ -1,4 +1,4 @@
-module Calculator.Console.Main (main) where
+module Calculator.UI.Console (main) where
 
 import Calculator.Interpreter
 import Calculator.Utils
@@ -6,18 +6,18 @@ import System.Console.Haskeline
 
 -- Runs a read-eval-print loop for the calculator.
 main :: IO ()
-main = runInputT defaultSettings (loop empty)
+main = runInputT defaultSettings (repl empty)
 
 -- The read-eval-print loop.
-loop :: Environment -> InputT IO ()
-loop env = do
+repl :: Environment -> InputT IO ()
+repl env = do
   maybeLine <- getInputLine "= "
   case maybeLine of
     Nothing -> return ()
     Just line ->
       case eval env line of
-        Left parseError -> outputStrLn (show parseError) >> loop env
-        Right (Left evalError) -> outputStrLn evalError >> loop env
-        Right (Right (env', Nothing)) -> loop env'
+        Left parseError -> outputStrLn (show parseError) >> repl env
+        Right (Left evalError) -> outputStrLn evalError >> repl env
+        Right (Right (env', Nothing)) -> repl env'
         Right (Right (env', Just result)) -> outputStrLn (showFloat result) >>
-                                             loop env'
+                                             repl env'
