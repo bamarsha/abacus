@@ -26,9 +26,7 @@ setup window = void $ mdo
 
   input <- UI.input
   error <- UI.p
-  getBody window
-    #+ [UI.div #+ [element input],
-        element error]
+  getBody window #+ [UI.div #+ [element input], element error]
 
   -- Evaluate the input when the Enter key is pressed.
   let eSubmit = filterE (== enterKey) (UI.keydown input)
@@ -46,7 +44,7 @@ setup window = void $ mdo
   let eEvalError = (fromLeft "" . snd) <$> eEval
   bError <- stepper "" eEvalError
 
-  element input # sink value bInput
+  element input # sink value' bInput
   element error # sink text bError
 
 -- Returns the result of evaluating the input using the environment from the
@@ -60,3 +58,16 @@ updateResult input (env, _) =
     Left parseError -> (env, Left (show parseError))
     Right (Left evalError) -> (env, Left evalError)
     Right (Right (env', maybeValue)) -> (env', Right maybeValue)
+
+-- A version of the value attribute that only sets itself if the new value is
+-- not equal to the current value. This keeps the cursor from moving to the end
+-- of an input box in some browsers if the input box is "controlled" (i.e., it
+-- has a behavior that updates with valueChange, and a sink that updates the
+-- value with the behavior).
+value' :: Attr Element String
+value' = mkReadWriteAttr get set
+  where
+    get = get' value
+    set v el = do
+      current <- get el
+      when (current /= v) $ set' value v el
