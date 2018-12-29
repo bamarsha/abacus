@@ -30,10 +30,12 @@ setup window = void $ mdo
 
   history <- UI.dlist
   input <- UI.input
+
   body <- getBody window
   element body #+
     [element history,
      UI.div #+ [element input]]
+  UI.setFocus input
 
   -- Evaluate the input when the Enter key is pressed.
   let eSubmit = filterE (== enterKey) (UI.keydown input)
