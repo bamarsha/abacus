@@ -28,28 +28,32 @@ setup :: Window -> UI ()
 setup window = void $ mdo
   pure window # set UI.title "Calculator"
 
+  history <- UI.dlist
   input <- UI.input
-  error <- UI.p
-  getBody window #+ [UI.div #+ [element input], element error]
+  body <- getBody window
+  element body #+
+    [element history,
+     UI.div #+ [element input]]
 
   -- Evaluate the input when the Enter key is pressed.
   let eSubmit = filterE (== enterKey) (UI.keydown input)
   eEval <- accumE (Calculator.Interpreter.empty, Right Nothing) $
     updateResult <$> (bInput <@ eSubmit)
 
-  -- Update the input with the value of the result after evaluating (if there
-  -- wasn't an error).
+  -- Update the input as the user types, and clear it after evaluating if there
+  -- wasn't an error.
   let eEvalValue = filterJust $ (rightToMaybe . snd) <$> eEval
   bInput <- stepper "" $ unionWith const
-    (maybe "" showFloat <$> eEvalValue)
+    ("" <$ eEvalValue)
     (UI.valueChange input)
-
-  -- Show the last error message (if any).
-  let eEvalError = (fromLeft "" . snd) <$> eEval
-  bError <- stepper "" eEvalError
-
   element input # sink value' bInput
-  element error # sink text bError
+
+  -- Update the history after evaluating.
+  onEvent ((,) <$> bInput <@> eEvalValue) $ addHistory body history
+
+  -- Show an alert if an error happens.
+  let eEvalError = filterJust $ (leftToMaybe . snd) <$> eEval
+  onEvent eEvalError $ runFunction . alert
 
 -- Returns the result of evaluating the input using the environment from the
 -- previous result. The result contains the new environment and either an error
@@ -63,6 +67,18 @@ updateResult input (env, _) =
     Right (Left evalError) -> (env, Left evalError)
     Right (Right (env', maybeValue)) -> (env', Right maybeValue)
 
+-- Adds a result to the history.
+addHistory :: Element -> Element -> (String, Maybe Double) -> UI ()
+addHistory body history (input, value) = do
+  element history #+
+    [UI.dterm # set text input,
+     UI.ddef # set text (maybe "" showFloat value)]
+  UI.scrollToBottom body
+
+-- Displays an alert dialog with a message.
+alert :: String -> JSFunction ()
+alert = ffi "alert(%1)"
+
 -- A version of the value attribute that only sets itself if the new value is
 -- not equal to the current value. This keeps the cursor from moving to the end
 -- of an input box in some browsers if the input box is "controlled" (i.e., it
@@ -72,6 +88,4 @@ value' :: Attr Element String
 value' = mkReadWriteAttr get set
   where
     get = get' value
-    set v el = do
-      current <- get el
-      when (current /= v) $ set' value v el
+    set v el = runFunction $ ffi "if ($(%1).val() != %2) $(%1).val(%2)" el v
