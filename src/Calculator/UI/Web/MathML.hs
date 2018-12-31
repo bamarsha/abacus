@@ -81,10 +81,9 @@ fromExpression parent side exp =
     Call name arguments ->
       if null arguments
       then [identifier name]
-      else [identifier name, operator "("] ++
-           intersperse (operator ",")
-                       (arguments >>= fromExpression Nothing Nothing) ++
-           [operator ")"]
+      else identifier name :
+           parens (intersperse (operator "," #. "comma")
+                               (arguments >>= fromExpression Nothing Nothing))
     Number n -> [number n]
 
 -- Transforms a statement into MathML.
@@ -120,8 +119,7 @@ number value = element "mn" # set text (showFloat value)
 -- Wraps a list of MathML elements with parentheses.
 parens :: [UI Element] -> [UI Element]
 parens elements =
-  [element "mrow" #+
-     ([operator "("] ++ elements ++ [operator ")"])]
+  [operator "(" #. "paren"] ++ elements ++ [operator ")" #. "paren"]
 
 -- Wraps a list of MathML elements with parentheses only if they are necessary
 -- from context.

@@ -32,14 +32,13 @@ setup :: Window -> UI ()
 setup window = void $ mdo
   pure window # set UI.title "Calculator"
   UI.addStyleSheet window "mathml.css"
+  UI.addStyleSheet window "calculator.css"
 
   history <- UI.dlist
   input <- UI.input
 
   body <- getBody window
-  element body #+
-    [element history,
-     UI.div #+ [element input]]
+  element body #+ [element history, element input]
   UI.setFocus input
 
   -- Evaluate the input when the Enter key is pressed.
@@ -76,6 +75,7 @@ evalInput (env, input) =
 addHistory :: Element -> Element -> EvalResult -> UI ()
 addHistory body history (EvalResult _ statement value) = do
   element history #+
-    [UI.dterm #+ [fromStatement statement],
-     UI.ddef # set text (maybe "" showFloat value)]
+    [UI.div #. "item" #+
+       [UI.dterm #+ [fromStatement statement],
+        UI.ddef # set text (maybe "" showFloat value)]]
   UI.scrollToBottom body

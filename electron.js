@@ -29,7 +29,7 @@ function startServer(port) {
 
 app.on("ready", () => {
   let window = new BrowserWindow({
-    width: 250,
+    width: 300,
     height: 300,
     title: "Calculator",
     show: false,
