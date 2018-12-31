@@ -1,4 +1,5 @@
-module Calculator.Interpreter (Environment, empty, eval) where
+module Calculator.Interpreter (Environment, empty, evalString, evalStatement)
+where
 
 import Calculator.AST
 import Calculator.Parser
@@ -75,10 +76,10 @@ evalStatement env (Binding name parameters e) =
 
 -- Evaluates a string with the given environment. Returns the result, if any,
 -- and the new environment.
-eval :: Environment
-     -> String
-     -> Either ParseError (Either EvalError (Environment, Maybe Double))
-eval env str =
+evalString :: Environment
+           -> String
+           -> Either ParseError (Either EvalError (Environment, Maybe Double))
+evalString env str =
   case parse str of
     Left error -> Left error
     Right statement -> Right (evalStatement env statement)

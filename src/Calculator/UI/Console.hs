@@ -15,7 +15,7 @@ repl env = do
   case maybeLine of
     Nothing -> return ()
     Just line ->
-      case eval env line of
+      case evalString env line of
         Left parseError -> outputStrLn (show parseError) >> repl env
         Right (Left evalError) -> outputStrLn evalError >> repl env
         Right (Right (env', Nothing)) -> repl env'

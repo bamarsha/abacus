@@ -37,6 +37,8 @@ executable calculator-console
 executable calculator-web
   import:              modules
   main-is:             Calculator/UI/Web.hs
+  other-modules:       Calculator.UI.Web.MathML,
+                       Calculator.UI.Web.Utils
   build-depends:       either ^>=5.0.1,
                        safe ^>=0.3.17,
                        threepenny-gui ^>=0.8.3.0
