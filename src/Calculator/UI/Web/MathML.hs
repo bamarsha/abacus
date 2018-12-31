@@ -51,7 +51,7 @@ fromExpression parent side exp =
            (fromExpression (Just RaiseOperator) (Just LeftSide) base ++
             fromExpression (Just RaiseOperator) (Just RightSide) exponent)]
     Negate e1 ->
-      [operator "-"] ++ fromExpression (Just NegateOperator) Nothing e1
+      operator "-" : fromExpression (Just NegateOperator) Nothing e1
     Multiply e1 e2 ->
       contextualParens
         parent side MultiplyOperator
@@ -63,9 +63,9 @@ fromExpression parent side exp =
         parent side DivideOperator
         [element "mfrac" #+
            [element "mrow" #+
-              (fromExpression (Just DivideOperator) (Just LeftSide) e1),
+              fromExpression (Just DivideOperator) (Just LeftSide) e1,
             element "mrow" #+
-              (fromExpression (Just DivideOperator) (Just RightSide) e2)]]
+              fromExpression (Just DivideOperator) (Just RightSide) e2]]
     Add e1 e2 ->
       contextualParens
         parent side AddOperator
@@ -119,7 +119,8 @@ number value = element "mn" # set text (showFloat value)
 -- Wraps a list of MathML elements with parentheses.
 parens :: [UI Element] -> [UI Element]
 parens elements =
-  [operator "(" #. "paren"] ++ elements ++ [operator ")" #. "paren"]
+  [element "mrow" #+
+     ([operator "(" #. "paren"] ++ elements ++ [operator ")" #. "paren"])]
 
 -- Wraps a list of MathML elements with parentheses only if they are necessary
 -- from context.
