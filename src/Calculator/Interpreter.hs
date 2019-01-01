@@ -51,13 +51,17 @@ evalExpression env exp =
     Call name arguments -> do
       case lookup name env of
         Nothing -> Left ("undefined function or variable " ++ name)
-        Just (Closure env parameters e) ->
-          if (length arguments) /= (length parameters)
+        Just (Closure env' parameters e) ->
+          if length arguments == 1 && null parameters
+          then
+            -- Treat this as implicit multiplication.
+            evalExpression env (Multiply e $ head arguments)
+          else if (length arguments) /= (length parameters)
           then Left ("wrong number of arguments for function " ++ name)
           else do
-            arguments' <- sequence (map (evalExpression env) arguments)
-            let env' = (zip parameters (map constant arguments')) ++ env
-            evalExpression env' e
+            arguments' <- sequence (map (evalExpression env') arguments)
+            let env'' = (zip parameters (map constant arguments')) ++ env'
+            evalExpression env'' e
     Number n -> return n
 
 -- Evaluates a statement with the given environment. Returns the result, if any,
