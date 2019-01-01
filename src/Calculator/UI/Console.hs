@@ -1,8 +1,9 @@
 module Calculator.UI.Console (main) where
 
-import Calculator.Interpreter
-import Calculator.Utils
-import System.Console.Haskeline
+import Calculator.Interpreter (Environment, empty, evalString)
+import Calculator.Utils (showFloat)
+import System.Console.Haskeline (InputT, defaultSettings, getInputLine,
+                                 outputStrLn, runInputT)
 
 -- Runs a read-eval-print loop for the calculator.
 main :: IO ()

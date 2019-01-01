@@ -3,7 +3,9 @@
 module Calculator.UI.Web.TeX (fromStatement) where
 
 import Calculator.AST
-import Calculator.Utils
+  (Expression (Add, Call, Divide, Multiply, Negate, Number, Raise, Subtract),
+   Statement (Binding, Expression))
+import Calculator.Utils (showFloat)
 import Data.List (intercalate)
 
 -- A math operator corresponding to a node in the AST.
@@ -49,28 +51,24 @@ fromExpression parent side = \case
         power' = fromExpression (Just RaiseOperator) (Just RightSide) power
     in contextualParens parent side RaiseOperator
                         (base' ++ "^{" ++ power' ++ "}")
-  Negate exp ->
-    "-" ++ fromExpression (Just NegateOperator) Nothing exp
-  Multiply exp1 exp2 ->
-    let exp1' = fromExpression (Just MultiplyOperator) (Just LeftSide) exp1
-        exp2' = fromExpression (Just MultiplyOperator) (Just RightSide) exp2
-    in contextualParens parent side MultiplyOperator
-                        (exp1' ++ "\\cdot " ++ exp2')
+  Negate e -> "-" ++ fromExpression (Just NegateOperator) Nothing e
+  Multiply e1 e2 ->
+    let s1 = fromExpression (Just MultiplyOperator) (Just LeftSide) e1
+        s2 = fromExpression (Just MultiplyOperator) (Just RightSide) e2
+    in contextualParens parent side MultiplyOperator (s1 ++ "\\cdot " ++ s2)
   Divide num denom ->
     let num' = fromExpression (Just DivideOperator) (Just LeftSide) num
         denom' = fromExpression (Just DivideOperator) (Just RightSide) denom
     in contextualParens parent side DivideOperator
                         ("\\frac{" ++ num' ++ "}{" ++ denom' ++ "}")
-  Add exp1 exp2 ->
-    let exp1' = fromExpression (Just AddOperator) (Just LeftSide) exp1
-        exp2' = fromExpression (Just AddOperator) (Just RightSide) exp2
-    in contextualParens parent side AddOperator
-                        (exp1' ++ "+" ++ exp2')
-  Subtract exp1 exp2 ->
-    let exp1' = fromExpression (Just SubtractOperator) (Just LeftSide) exp1
-        exp2' = fromExpression (Just SubtractOperator) (Just RightSide) exp2
-    in contextualParens parent side SubtractOperator
-                        (exp1' ++ "-" ++ exp2')
+  Add e1 e2 ->
+    let s1 = fromExpression (Just AddOperator) (Just LeftSide) e1
+        s2 = fromExpression (Just AddOperator) (Just RightSide) e2
+    in contextualParens parent side AddOperator (s1 ++ "+" ++ s2)
+  Subtract e1 e2 ->
+    let s1 = fromExpression (Just SubtractOperator) (Just LeftSide) e1
+        s2 = fromExpression (Just SubtractOperator) (Just RightSide) e2
+    in contextualParens parent side SubtractOperator (s1 ++ "-" ++ s2)
   Call name arguments ->
     if null arguments
     then name
@@ -80,25 +78,26 @@ fromExpression parent side = \case
 
 -- Transforms a statement into TeX.
 fromStatement :: Statement -> String
-fromStatement (Expression exp) = fromExpression Nothing Nothing exp
-fromStatement (Binding name parameters exp) =
+fromStatement (Expression e) = fromExpression Nothing Nothing e
+fromStatement (Binding name parameters e) =
   fromExpression Nothing Nothing
                  (Call name $ map (\p -> Call p []) parameters) ++
   "=" ++
-  fromExpression Nothing Nothing exp
+  fromExpression Nothing Nothing e
 
--- Wraps a TeX expression with parentheses.
+-- Wraps a TeX string with parentheses.
 parens :: String -> String
-parens exp = "(" ++ exp ++ ")"
+parens s = "(" ++ s ++ ")"
 
 -- Wraps a TeX expression with parentheses only if they are necessary from
 -- context.
 contextualParens :: Maybe Operator -> Maybe Side -> Operator -> String -> String
-contextualParens parent side child =
-  if needsParens parent side child then parens else id
+contextualParens Nothing _ _ = id
+contextualParens (Just parent) side child =
+  if needsParens then parens else id
   where
-    needsParens Nothing _ _ = False
-    needsParens (Just parent) side child =
+    needsParens :: Bool
+    needsParens =
       (precedence parent > precedence child ||
        precedence parent == precedence child && associativity parent /= side) &&
       not (parent == child && commutative parent)

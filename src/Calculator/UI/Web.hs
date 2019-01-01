@@ -2,38 +2,42 @@
 
 module Calculator.UI.Web (main) where
 
-import Calculator.AST
-import Calculator.Interpreter
-import Calculator.Parser
-import Calculator.UI.Web.TeX
-import Calculator.UI.Web.Utils
-import Calculator.Utils
+import Calculator.AST (Statement)
+import Calculator.Interpreter (Environment, empty, evalStatement)
+import Calculator.Parser (parse)
+import Calculator.UI.Web.TeX (fromStatement)
+import Calculator.UI.Web.Utils (addScript, alert, value')
+import Calculator.Utils (showFloat)
+
 import Control.Monad (void)
-import Data.Either.Combinators
+import Data.Either.Combinators (leftToMaybe, rightToMaybe)
 import Data.Maybe (listToMaybe)
+
 import qualified Graphics.UI.Threepenny as UI
-import Graphics.UI.Threepenny.Core
+import Graphics.UI.Threepenny.Core (Element, JSFunction, UI, Window, (#), (#+),
+                                    (#.), (<@))
+
 import System.Environment (getArgs)
 
 -- The result of evaluating the calculator's input.
-data EvalResult = EvalResult { env :: Environment,
-                               statement :: Statement,
-                               value :: Maybe Double }
+data Result = Result { _inputStatement :: Statement,
+                       _resultValue :: Maybe Double,
+                       resultEnv :: Environment }
 
 -- Starts the GUI for the calculator.
 main :: IO ()
 main = do
   args <- getArgs
   let port = read <$> listToMaybe args
-  startGUI defaultConfig { jsPort = port,
-                           jsStatic = Just ".",
-                           jsWindowReloadOnDisconnect = False }
+  UI.startGUI UI.defaultConfig { UI.jsPort = port,
+                                 UI.jsStatic = Just ".",
+                                 UI.jsWindowReloadOnDisconnect = False }
            setup
 
 -- Sets up the main window.
 setup :: Window -> UI ()
 setup window = void $ mdo
-  pure window # set UI.title "Calculator"
+  _ <- return window # UI.set UI.title "Calculator"
   UI.addStyleSheet window "calculator.css"
   UI.addStyleSheet window "../node_modules/katex/dist/katex.min.css"
   addScript window "../node_modules/katex/dist/katex.min.js"
@@ -41,51 +45,51 @@ setup window = void $ mdo
   history <- UI.dlist
   input <- UI.input
 
-  body <- getBody window
-  element body #+ [element history, element input]
+  body <- UI.getBody window
+  _ <- UI.element body #+ [UI.element history, UI.element input]
   UI.setFocus input
 
   -- Evaluate the input when the Enter key is pressed.
-  let eSubmit = filterE (== 13) (UI.keydown input)
+  let eSubmit = UI.filterE (== 13) (UI.keydown input)
   let eEval = evalInput <$> ((,) <$> bEnv <*> bInput) <@ eSubmit
 
   -- Update the input as the user types, and clear it after evaluating if there
   -- wasn't an error.
-  let eEvalSuccess = filterJust $ rightToMaybe <$> eEval
-  bInput <- stepper "" $ unionWith const
+  let eEvalSuccess = UI.filterJust $ rightToMaybe <$> eEval
+  bInput <- UI.stepper "" $ UI.unionWith const
     ("" <$ eEvalSuccess)
     (UI.valueChange input)
-  element input # sink value' bInput
-  bEnv <- stepper Calculator.Interpreter.empty (env <$> eEvalSuccess)
+  _ <- UI.element input # UI.sink value' bInput
+  bEnv <- UI.stepper empty (resultEnv <$> eEvalSuccess)
 
   -- Update the history after evaluating.
-  onEvent eEvalSuccess $ addHistory body history
+  _ <- UI.onEvent eEvalSuccess $ addHistory body history
 
   -- Show an alert if an error happens.
-  let eEvalError = filterJust $ leftToMaybe <$> eEval
-  onEvent eEvalError $ runFunction . alert
+  let eEvalError = UI.filterJust $ leftToMaybe <$> eEval
+  UI.onEvent eEvalError $ UI.runFunction . alert
 
 -- Evaluates the input with the current environment and returns either an error
 -- message (Left) or the result (Right).
-evalInput :: (Environment, String) -> Either String EvalResult
+evalInput :: (Environment, String) -> Either String Result
 evalInput (env, input) =
   case parse input of
-    Left error -> Left (show error)
+    Left err -> Left (show err)
     Right statement -> case evalStatement env statement of
-      Left error -> Left error
-      Right (env', value) -> Right (EvalResult env' statement value)
+      Left err -> Left err
+      Right (env', value) -> Right (Result statement value env')
 
 -- Adds a result to the history.
-addHistory :: Element -> Element -> EvalResult -> UI ()
-addHistory body history (EvalResult _ statement value) = do
+addHistory :: Element -> Element -> Result -> UI ()
+addHistory body history (Result statement value _) = do
   input <- UI.dterm
   output <- UI.ddef
-  runFunction $ renderKatex (fromStatement statement) input
-  runFunction $ renderKatex (maybe "" showFloat value) output
-  element history #+
-    [UI.div #. "item" #+ [element input, element output]]
+  UI.runFunction $ renderKatex (fromStatement statement) input
+  UI.runFunction $ renderKatex (maybe "" showFloat value) output
+  _ <- UI.element history #+
+    [UI.div #. "item" #+ [UI.element input, UI.element output]]
   UI.scrollToBottom body
 
 -- Renders a TeX string to the element using KaTeX.
 renderKatex :: String -> Element -> JSFunction ()
-renderKatex = ffi "katex.render(%1, %2, { displayMode: true })"
+renderKatex = UI.ffi "katex.render(%1, %2, { displayMode: true })"

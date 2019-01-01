@@ -1,9 +1,12 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Calculator.Interpreter (Environment, empty, evalString, evalStatement)
 where
 
 import Calculator.AST
-import Calculator.Parser
-import Control.Monad (sequence)
+  (Expression (Add, Call, Divide, Multiply, Negate, Number, Raise, Subtract),
+   Statement (Binding, Expression))
+import Calculator.Parser (parse)
 import Text.Parsec.Error (ParseError)
 
 -- The context of an expression.
@@ -25,52 +28,49 @@ constant = Closure empty [] . Number
 
 -- Evaluates an expression with the given environment.
 evalExpression :: Environment -> Expression -> Either EvalError Double
-evalExpression env exp =
-  case exp of
-    Raise base exponent -> do
-      base' <- evalExpression env base
-      exponent' <- evalExpression env exponent
-      Right (base' ** exponent')
-    Negate e -> evalExpression env e >>= (return . negate)
-    Multiply e1 e2 -> do
-      v1 <- evalExpression env e1
-      v2 <- evalExpression env e2
-      Right (v1 * v2)
-    Divide e1 e2 -> do
-      v1 <- evalExpression env e1
-      v2 <- evalExpression env e2
-      Right (v1 / v2)
-    Add e1 e2 -> do
-      v1 <- evalExpression env e1
-      v2 <- evalExpression env e2
-      Right (v1 + v2)
-    Subtract e1 e2 -> do
-      v1 <- evalExpression env e1
-      v2 <- evalExpression env e2
-      Right (v1 - v2)
-    Call name arguments -> do
-      case lookup name env of
-        Nothing -> Left ("undefined function or variable " ++ name)
-        Just (Closure env' parameters e) ->
-          if length arguments == 1 && null parameters
-          then
+evalExpression env = \case
+  Raise base power -> do
+    base' <- evalExpression env base
+    power' <- evalExpression env power
+    Right (base' ** power')
+  Negate e -> negate <$> evalExpression env e
+  Multiply e1 e2 -> do
+    v1 <- evalExpression env e1
+    v2 <- evalExpression env e2
+    Right (v1 * v2)
+  Divide num denom -> do
+    num' <- evalExpression env num
+    denom' <- evalExpression env denom
+    Right (num' / denom')
+  Add e1 e2 -> do
+    v1 <- evalExpression env e1
+    v2 <- evalExpression env e2
+    Right (v1 + v2)
+  Subtract e1 e2 -> do
+    v1 <- evalExpression env e1
+    v2 <- evalExpression env e2
+    Right (v1 - v2)
+  Call name arguments ->
+    case lookup name env of
+      Nothing -> Left ("undefined function or variable " ++ name)
+      Just (Closure env' parameters e)
+        | length arguments == 1 && null parameters ->
             -- Treat this as implicit multiplication.
             evalExpression env (Multiply e $ head arguments)
-          else if (length arguments) /= (length parameters)
-          then Left ("wrong number of arguments for function " ++ name)
-          else do
-            arguments' <- sequence (map (evalExpression env') arguments)
-            let env'' = (zip parameters (map constant arguments')) ++ env'
+        | length arguments /= length parameters ->
+            Left ("wrong number of arguments for function " ++ name)
+        | otherwise -> do
+            arguments' <- mapM (evalExpression env) arguments
+            let env'' = zip parameters (map constant arguments') ++ env'
             evalExpression env'' e
-    Number n -> return n
+  Number n -> return n
 
 -- Evaluates a statement with the given environment. Returns the result, if any,
 -- and the new environment.
-evalStatement :: Environment
-              -> Statement
+evalStatement :: Environment -> Statement
               -> Either EvalError (Environment, Maybe Double)
-evalStatement env (Expression exp) = do
-  result <- evalExpression env exp
+evalStatement env (Expression e) = do
+  result <- evalExpression env e
   Right (env, Just result)
 evalStatement env (Binding name parameters e) =
   if null parameters
@@ -80,10 +80,9 @@ evalStatement env (Binding name parameters e) =
 
 -- Evaluates a string with the given environment. Returns the result, if any,
 -- and the new environment.
-evalString :: Environment
-           -> String
+evalString :: Environment -> String
            -> Either ParseError (Either EvalError (Environment, Maybe Double))
 evalString env str =
   case parse str of
-    Left error -> Left error
+    Left err -> Left err
     Right statement -> Right (evalStatement env statement)
