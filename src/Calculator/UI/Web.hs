@@ -5,7 +5,7 @@ module Calculator.UI.Web (main) where
 import Calculator.AST
 import Calculator.Interpreter
 import Calculator.Parser
-import Calculator.UI.Web.MathML
+import Calculator.UI.Web.TeX
 import Calculator.UI.Web.Utils
 import Calculator.Utils
 import Control.Monad (void)
@@ -25,14 +25,18 @@ main :: IO ()
 main = do
   args <- getArgs
   let port = read <$> listToMaybe args
-  startGUI defaultConfig { jsPort = port, jsStatic = Just "." } setup
+  startGUI defaultConfig { jsPort = port,
+                           jsStatic = Just ".",
+                           jsWindowReloadOnDisconnect = False }
+           setup
 
 -- Sets up the main window.
 setup :: Window -> UI ()
 setup window = void $ mdo
   pure window # set UI.title "Calculator"
-  UI.addStyleSheet window "mathml.css"
   UI.addStyleSheet window "calculator.css"
+  UI.addStyleSheet window "../node_modules/katex/dist/katex.min.css"
+  addScript window "../node_modules/katex/dist/katex.min.js"
 
   history <- UI.dlist
   input <- UI.input
@@ -74,8 +78,14 @@ evalInput (env, input) =
 -- Adds a result to the history.
 addHistory :: Element -> Element -> EvalResult -> UI ()
 addHistory body history (EvalResult _ statement value) = do
+  input <- UI.dterm
+  output <- UI.ddef
+  runFunction $ renderKatex (fromStatement statement) input
+  runFunction $ renderKatex (maybe "" showFloat value) output
   element history #+
-    [UI.div #. "item" #+
-       [UI.dterm #+ [fromStatement statement],
-        UI.ddef # set text (maybe "" showFloat value)]]
+    [UI.div #. "item" #+ [element input, element output]]
   UI.scrollToBottom body
+
+-- Renders a TeX string to the element using KaTeX.
+renderKatex :: String -> Element -> JSFunction ()
+renderKatex = ffi "katex.render(%1, %2, { displayMode: true })"
