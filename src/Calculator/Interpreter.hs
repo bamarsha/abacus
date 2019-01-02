@@ -11,7 +11,7 @@ import Data.Maybe (isJust)
 import Text.Parsec.Error (ParseError)
 
 -- Maps names to functions that can be called by other expressions.
-type Environment = [(String, Function)]
+newtype Environment = Environment { list :: [(String, Function)] }
 
 -- A function that can be called from the environment.
 data Function
@@ -29,13 +29,14 @@ type EvalError = String
 -- The default environment.
 defaultEnv :: Environment
 defaultEnv =
-  [("cos", Native 1 $ \[x] -> cos x),
-   ("pi", constant pi),
-   ("sin", Native 1 $ \[x] -> sin x)]
+  Environment
+    [("cos", Native 1 $ \[x] -> cos x),
+     ("pi", constant pi),
+     ("sin", Native 1 $ \[x] -> sin x)]
 
 --- Returns a closure for a constant function.
 constant :: Double -> Function
-constant = Closure [] [] . Number
+constant = Closure (Environment []) [] . Number
 
 -- Evaluates an expression with the given environment.
 evalExpression :: Environment -> Expression -> Either EvalError Double
@@ -67,7 +68,7 @@ evalExpression env = \case
 -- Calls a function in the environment with the given name and arguments.
 call :: String -> [Expression] -> Environment -> Either EvalError Double
 call name arguments env =
-  case lookup name env of
+  case lookup name (list env) of
     Nothing -> Left ("undefined function or variable " ++ name)
     Just (Closure env' parameters e)
       | length arguments == 1 && null parameters -> do
@@ -79,8 +80,8 @@ call name arguments env =
           Left ("wrong number of arguments for function " ++ name)
       | otherwise -> do
           arguments' <- mapM (evalExpression env) arguments
-          let env'' = zip parameters (map constant arguments') ++ env'
-          evalExpression env'' e
+          let env'' = zip parameters (map constant arguments') ++ list env'
+          evalExpression (Environment env'') e
     Just (Native arity f) ->
       if length arguments /= arity
       then Left ("wrong number of arguments for function " ++ name)
@@ -94,12 +95,13 @@ evalStatement env (Expression e) = do
   result <- evalExpression env e
   Right (env, Just result)
 evalStatement env (Binding name parameters e)
-  | isJust (lookup name defaultEnv) =
+  | isJust $ lookup name (list defaultEnv) =
       Left ("can't redefine built-in function or variable " ++ name)
   | null parameters = do
       result <- evalExpression env e
-      Right ((name, constant result) : env, Just result)
-  | otherwise = Right ((name, Closure env parameters e) : env, Nothing)
+      Right (Environment $ (name, constant result) : list env, Just result)
+  | otherwise =
+      Right (Environment $ (name, Closure env parameters e) : list env, Nothing)
 
 -- Evaluates a string with the given environment. Returns the result, if any,
 -- and the new environment.
