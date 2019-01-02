@@ -30,13 +30,27 @@ type EvalError = String
 defaultEnv :: Environment
 defaultEnv =
   Environment
-    [("cos", Native 1 $ \[x] -> cos x),
-     ("pi", constant pi),
-     ("sin", Native 1 $ \[x] -> sin x)]
+    [("pi", constant pi),
+     ("e", constant (exp 1)),
+     ("sin", Native 1 $ \[x] -> sin x),
+     ("cos", Native 1 $ \[x] -> cos x),
+     ("sqrt", Native 1 $ \[x] -> sqrt x),
+     ("cbrt", function["x"] (Call "root" [Call "x" [], Number 3.0])),
+     ("root", function ["x", "k"] $ Raise (Call "x" [])
+                                          (Divide (Number 1.0) (Call "k" []))),
+     ("ln", Native 1 $ \[x] -> log x),
+     ("log", function ["b", "x"] $ Divide (Call "ln" [Call "x" []])
+                                          (Call "ln" [Call "b" []])),
+     ("log2", function ["x"] (Call "log" [Number 2.0, Call "x" []])),
+     ("log10", function ["x"] (Call "log" [Number 10.0, Call "x" []]))]
 
---- Returns a closure for a constant function.
+--- Returns a closure for a constant with an empty environment.
 constant :: Double -> Function
 constant = Closure (Environment []) [] . Number
+
+-- Returns a closure for a function with the default environment.
+function :: [String] -> Expression -> Function
+function = Closure defaultEnv
 
 -- Evaluates an expression with the given environment.
 evalExpression :: Environment -> Expression -> Either EvalError Double
