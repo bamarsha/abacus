@@ -5,8 +5,8 @@ module Calculator.Parser (Calculator.Parser.parse) where
 import Calculator.AST
   (Expression (Add, Call, Divide, Negate, Number, Multiply, Raise, Subtract),
    Statement (Expression, Binding))
-import Calculator.Tokenizer
-  (Token (IdentifierToken, NumberToken, OperatorToken, SymbolToken), tokenize)
+import Calculator.Tokenizer (Token (Identifier, NumberT, Operator, Symbol),
+                             tokenize)
 import Calculator.Utils (intersperseWhen)
 
 import Data.Functor.Identity (Identity)
@@ -53,27 +53,27 @@ satisfy = tokenPrim show (\pos _ _ -> pos)
 -- The parser for the given operator o.
 operator :: String -> Parsec [Token] () ()
 operator o = satisfy $ \token ->
-  if token == OperatorToken o
+  if token == Operator o
   then Just ()
   else Nothing
 
 -- The parser for the given symbol s.
 symbol :: String -> Parsec [Token] () ()
 symbol s = satisfy $ \token ->
-  if token == SymbolToken s
+  if token == Symbol s
   then Just ()
   else Nothing
 
 -- The parser for an identifier. Returns the identifier as a string.
 identifier :: Parsec [Token] () String
 identifier = satisfy $ \case
-  IdentifierToken ident -> Just ident
+  Identifier ident -> Just ident
   _ -> Nothing
 
 -- The parser for a number. Returns the number as an Expression.
 number :: Parsec [Token] () Expression
 number = satisfy $ \case
-  NumberToken value -> Just (Number value)
+  NumberT value -> Just (Number value)
   _ -> Nothing
 
 -- parens p parses p enclosed in parentheses, returning the value of p.
@@ -135,17 +135,17 @@ parse string =
 -- multiplication by inserting multiplication operators.
 withExplicitMult :: [Token] -> [Token]
 withExplicitMult =
-  intersperseWhen isImplicitMult $ OperatorToken "*"
+  intersperseWhen isImplicitMult $ Operator "*"
   where
     isImplicitMult :: (Token, Token) -> Bool
     isImplicitMult = \case
-      (IdentifierToken _, IdentifierToken _) -> True
-      (NumberToken _, IdentifierToken _) -> True
-      (NumberToken _, SymbolToken "(") -> True
-      (SymbolToken ")", IdentifierToken _) -> True
-      (SymbolToken ")", NumberToken _) -> True
-      (SymbolToken ")", SymbolToken "(") -> True
+      (Identifier _, Identifier _) -> True
+      (NumberT _, Identifier _) -> True
+      (NumberT _, Symbol "(") -> True
+      (Symbol ")", Identifier _) -> True
+      (Symbol ")", NumberT _) -> True
+      (Symbol ")", Symbol "(") -> True
       -- The parser can't tell if this is multiplication or a function call
       -- since it depends on the environment.
-      (IdentifierToken _, SymbolToken "(") -> False
+      (Identifier _, Symbol "(") -> False
       _ -> False

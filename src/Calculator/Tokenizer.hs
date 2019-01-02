@@ -11,10 +11,10 @@ import Text.Parsec.Prim (Parsec, many, runParser, (<|>))
 import qualified Text.Parsec.Token as PT
 
 -- A token.
-data Token = IdentifierToken String
-           | NumberToken Double
-           | OperatorToken String
-           | SymbolToken String
+data Token = Identifier String
+           | NumberT Double
+           | Operator String
+           | Symbol String
   deriving (Eq, Show)
 
 -- The list of valid operator names.
@@ -35,18 +35,18 @@ tokenParser =
 -- The parser for any operator token.
 operator :: Parsec String () Token
 operator =
-  choice $ map (\o -> PT.reservedOp tokenParser o >> return (OperatorToken o))
+  choice $ map (\o -> PT.reservedOp tokenParser o >> return (Operator o))
                operatorNames
 
 -- The parser for any symbol token.
 symbol :: Parsec String () Token
 symbol =
-  choice $ map (\o -> PT.symbol tokenParser o >> return (SymbolToken o))
+  choice $ map (\o -> PT.symbol tokenParser o >> return (Symbol o))
            symbolNames
 
 -- The parser for a function or variable identifier.
 identifier :: Parsec String () Token
-identifier = IdentifierToken <$> PT.identifier tokenParser
+identifier = Identifier <$> PT.identifier tokenParser
 
 -- The parser for a number token. It accepts both naturals and floats, but
 -- naturals are converted to floats.
@@ -54,8 +54,8 @@ number :: Parsec String () Token
 number = alwaysFloat <$> PT.naturalOrFloat tokenParser
   where
     alwaysFloat :: Either Integer Double -> Token
-    alwaysFloat (Left n) = NumberToken (fromIntegral n)
-    alwaysFloat (Right f) = NumberToken f
+    alwaysFloat (Left n) = NumberT (fromIntegral n)
+    alwaysFloat (Right f) = NumberT f
 
 -- The parser for taking a complete string of math and returning a list of
 -- tokens.

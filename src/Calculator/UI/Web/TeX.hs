@@ -9,12 +9,12 @@ import Calculator.Utils (showFloat)
 import Data.List (intercalate)
 
 -- A math operator corresponding to a node in the AST.
-data Operator = RaiseOperator
-              | NegateOperator
-              | MultiplyOperator
-              | DivideOperator
-              | AddOperator
-              | SubtractOperator
+data Operator = Exponent
+              | Negative
+              | Times
+              | Division
+              | Plus
+              | Minus
   deriving Eq
 
 -- The sides of an infix operator.
@@ -23,52 +23,51 @@ data Side = LeftSide | RightSide
 
 -- The precedence of an operator.
 precedence :: Operator -> Int
-precedence RaiseOperator = 3
-precedence NegateOperator = 2
-precedence MultiplyOperator = 1
-precedence DivideOperator = 1
-precedence AddOperator = 0
-precedence SubtractOperator = 0
+precedence Exponent = 3
+precedence Negative = 2
+precedence Times = 1
+precedence Division = 1
+precedence Plus = 0
+precedence Minus = 0
 
 -- Returns Just the associativity of an operator if the operator is binary, or
 -- Nothing if the operator is unary.
 associativity :: Operator -> Maybe Side
-associativity RaiseOperator = Just RightSide
-associativity NegateOperator = Nothing
+associativity Exponent = Just RightSide
+associativity Negative = Nothing
 associativity _ = Just LeftSide
 
 -- Returns True if the operator is commutative or False otherwise.
 commutative :: Operator -> Bool
-commutative MultiplyOperator = True
-commutative AddOperator = True
+commutative Times = True
+commutative Plus = True
 commutative _ = False
 
 -- Transforms an expression into TeX.
 fromExpression :: Maybe Operator -> Maybe Side -> Expression -> String
 fromExpression parent side = \case
   Raise base power ->
-    let base' = fromExpression (Just RaiseOperator) (Just LeftSide) base
-        power' = fromExpression (Just RaiseOperator) (Just RightSide) power
-    in contextualParens parent side RaiseOperator
-                        (base' ++ "^{" ++ power' ++ "}")
-  Negate e -> "-" ++ fromExpression (Just NegateOperator) Nothing e
+    let base' = fromExpression (Just Exponent) (Just LeftSide) base
+        power' = fromExpression (Just Exponent) (Just RightSide) power
+    in contextualParens parent side Exponent (base' ++ "^{" ++ power' ++ "}")
+  Negate e -> "-" ++ fromExpression (Just Negative) Nothing e
   Multiply e1 e2 ->
-    let s1 = fromExpression (Just MultiplyOperator) (Just LeftSide) e1
-        s2 = fromExpression (Just MultiplyOperator) (Just RightSide) e2
-    in contextualParens parent side MultiplyOperator (s1 ++ "\\cdot " ++ s2)
+    let s1 = fromExpression (Just Times) (Just LeftSide) e1
+        s2 = fromExpression (Just Times) (Just RightSide) e2
+    in contextualParens parent side Times (s1 ++ "\\cdot " ++ s2)
   Divide num denom ->
-    let num' = fromExpression (Just DivideOperator) (Just LeftSide) num
-        denom' = fromExpression (Just DivideOperator) (Just RightSide) denom
-    in contextualParens parent side DivideOperator
+    let num' = fromExpression (Just Division) (Just LeftSide) num
+        denom' = fromExpression (Just Division) (Just RightSide) denom
+    in contextualParens parent side Division
                         ("\\frac{" ++ num' ++ "}{" ++ denom' ++ "}")
   Add e1 e2 ->
-    let s1 = fromExpression (Just AddOperator) (Just LeftSide) e1
-        s2 = fromExpression (Just AddOperator) (Just RightSide) e2
-    in contextualParens parent side AddOperator (s1 ++ "+" ++ s2)
+    let s1 = fromExpression (Just Plus) (Just LeftSide) e1
+        s2 = fromExpression (Just Plus) (Just RightSide) e2
+    in contextualParens parent side Plus (s1 ++ "+" ++ s2)
   Subtract e1 e2 ->
-    let s1 = fromExpression (Just SubtractOperator) (Just LeftSide) e1
-        s2 = fromExpression (Just SubtractOperator) (Just RightSide) e2
-    in contextualParens parent side SubtractOperator (s1 ++ "-" ++ s2)
+    let s1 = fromExpression (Just Minus) (Just LeftSide) e1
+        s2 = fromExpression (Just Minus) (Just RightSide) e2
+    in contextualParens parent side Minus (s1 ++ "-" ++ s2)
   Call name arguments ->
     if null arguments
     then name
