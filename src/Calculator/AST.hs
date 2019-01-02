@@ -1,4 +1,4 @@
-module Calculator.AST where
+module Calculator.AST (Expression (..), Statement (..)) where
 
 -- A math expression.
 data Expression = Raise Expression Expression

@@ -41,7 +41,7 @@ operator =
 -- The parser for any symbol token.
 symbol :: Parsec String () Token
 symbol =
-  choice $ map (\o -> PT.symbol tokenParser o >> return (Symbol o))
+  choice $ map (\s -> PT.symbol tokenParser s >> return (Symbol s))
            symbolNames
 
 -- The parser for a function or variable identifier.

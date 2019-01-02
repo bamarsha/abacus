@@ -1,13 +1,13 @@
 module Calculator.UI.Console (main) where
 
-import Calculator.Interpreter (Environment, empty, evalString)
+import Calculator.Interpreter (Environment, defaultEnv, evalString)
 import Calculator.Utils (showFloat)
 import System.Console.Haskeline (InputT, defaultSettings, getInputLine,
                                  outputStrLn, runInputT)
 
 -- Runs a read-eval-print loop for the calculator.
 main :: IO ()
-main = runInputT defaultSettings (repl empty)
+main = runInputT defaultSettings (repl defaultEnv)
 
 -- The read-eval-print loop.
 repl :: Environment -> InputT IO ()

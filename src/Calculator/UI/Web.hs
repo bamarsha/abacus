@@ -3,7 +3,7 @@
 module Calculator.UI.Web (main) where
 
 import Calculator.AST (Statement)
-import Calculator.Interpreter (Environment, empty, evalStatement)
+import Calculator.Interpreter (Environment, defaultEnv, evalStatement)
 import Calculator.Parser (parse)
 import Calculator.UI.Web.TeX (fromStatement)
 import Calculator.UI.Web.Utils (addScript, alert, value')
@@ -60,7 +60,7 @@ setup window = void $ mdo
     ("" <$ eEvalSuccess)
     (UI.valueChange input)
   _ <- UI.element input # UI.sink value' bInput
-  bEnv <- UI.stepper empty (resultEnv <$> eEvalSuccess)
+  bEnv <- UI.stepper defaultEnv (resultEnv <$> eEvalSuccess)
 
   -- Update the history after evaluating.
   _ <- UI.onEvent eEvalSuccess $ addHistory body history
