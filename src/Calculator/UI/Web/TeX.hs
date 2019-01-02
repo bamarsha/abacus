@@ -7,6 +7,7 @@ import Calculator.AST
    Statement (Binding, Expression))
 import Calculator.Utils (showFloat)
 import Data.List (intercalate)
+import Data.Maybe (fromMaybe)
 
 -- A math operator corresponding to a node in the AST.
 data Operator = Exponent
@@ -20,6 +21,13 @@ data Operator = Exponent
 -- The sides of an infix operator.
 data Side = LeftSide | RightSide
   deriving Eq
+
+-- A list of special names that have TeX control sequences.
+specialNames :: [(String, String)]
+specialNames =
+  [("cos", "\\cos"),
+   ("pi", "\\pi"),
+   ("sin", "\\sin")]
 
 -- The precedence of an operator.
 precedence :: Operator -> Int
@@ -68,23 +76,28 @@ fromExpression parent side = \case
     let s1 = fromExpression (Just Minus) (Just LeftSide) e1
         s2 = fromExpression (Just Minus) (Just RightSide) e2
     in contextualParens parent side Minus (s1 ++ "-" ++ s2)
-  Call name arguments ->
-    if null arguments
-    then name
-    else name ++ parens (intercalate "," $
-                         map (fromExpression Nothing Nothing) arguments)
+  Call name args ->
+    let args' = intercalate "," (map (fromExpression Nothing Nothing) args)
+    in identifier name ++ (if null args' then "" else parens args')
   Number value -> showFloat value
 
 -- Transforms a statement into TeX.
 fromStatement :: Statement -> String
 fromStatement (Expression e) = fromExpression Nothing Nothing e
-fromStatement (Binding name parameters e) =
-  fromExpression Nothing Nothing
-                 (Call name $ map (\p -> Call p []) parameters) ++
+fromStatement (Binding name params e) =
+  fromExpression Nothing Nothing (Call name $ map (\p -> Call p []) params) ++
   "=" ++
   fromExpression Nothing Nothing e
 
--- Wraps a TeX string with parentheses.
+-- Formats an identifier as a TeX string.
+identifier :: String -> String
+identifier ident =
+  fromMaybe (if length ident > 1
+             then "\\mathrm{" ++ ident ++ "}"
+             else ident)
+            (lookup ident specialNames)
+
+-- Wraps a string with parentheses.
 parens :: String -> String
 parens s = "(" ++ s ++ ")"
 

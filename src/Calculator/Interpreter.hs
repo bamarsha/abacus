@@ -62,30 +62,30 @@ evalExpression env = \case
     v1 <- evalExpression env e1
     v2 <- evalExpression env e2
     Right (v1 - v2)
-  Call name arguments -> call name arguments env
+  Call name args -> call name args env
   Number n -> return n
 
 -- Calls a function in the environment with the given name and arguments.
 call :: String -> [Expression] -> Environment -> Either EvalError Double
-call name arguments env =
+call name args env =
   case lookup name (list env) of
     Nothing -> Left ("undefined function or variable " ++ name)
-    Just (Closure env' parameters e)
-      | length arguments == 1 && null parameters -> do
+    Just (Closure env' params e)
+      | length args == 1 && null params -> do
           -- Treat this as implicit multiplication.
           v1 <- evalExpression env' e
-          v2 <- evalExpression env (head arguments)
+          v2 <- evalExpression env (head args)
           Right (v1 * v2)
-      | length arguments /= length parameters ->
+      | length args /= length params ->
           Left ("wrong number of arguments for function " ++ name)
       | otherwise -> do
-          arguments' <- mapM (evalExpression env) arguments
-          let env'' = zip parameters (map constant arguments') ++ list env'
+          args' <- mapM (evalExpression env) args
+          let env'' = zip params (map constant args') ++ list env'
           evalExpression (Environment env'') e
     Just (Native arity f) ->
-      if length arguments /= arity
+      if length args /= arity
       then Left ("wrong number of arguments for function " ++ name)
-      else f <$> mapM (evalExpression env) arguments
+      else f <$> mapM (evalExpression env) args
 
 -- Evaluates a statement with the given environment. Returns the result, if any,
 -- and the new environment.
@@ -94,14 +94,14 @@ evalStatement :: Environment -> Statement
 evalStatement env (Expression e) = do
   result <- evalExpression env e
   Right (env, Just result)
-evalStatement env (Binding name parameters e)
+evalStatement env (Binding name params e)
   | isJust $ lookup name (list defaultEnv) =
       Left ("can't redefine built-in function or variable " ++ name)
-  | null parameters = do
+  | null params = do
       result <- evalExpression env e
       Right (Environment $ (name, constant result) : list env, Just result)
   | otherwise =
-      Right (Environment $ (name, Closure env parameters e) : list env, Nothing)
+      Right (Environment $ (name, Closure env params e) : list env, Nothing)
 
 -- Evaluates a string with the given environment. Returns the result, if any,
 -- and the new environment.

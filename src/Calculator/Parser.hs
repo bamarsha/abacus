@@ -100,16 +100,16 @@ list parser = (:) <$> parser <*> option [] (symbol "," >> list parser)
 call :: ParsecT [Token] () Identity Expression
 call = do
   name <- identifier
-  arguments <- option [] (parens $ list expression)
-  return (Call name arguments)
+  args <- option [] (parens $ list expression)
+  return (Call name args)
 
 -- The parser for a function binding.
 binding :: ParsecT [Token] () Identity Statement
 binding = do
   name <- identifier
-  parameters <- option [] (parens $ list identifier)
+  params <- option [] (parens $ list identifier)
   symbol "="
-  Binding name parameters <$> expression
+  Binding name params <$> expression
 
 -- The parser for a statement.
 statement :: ParsecT [Token] () Identity Statement
