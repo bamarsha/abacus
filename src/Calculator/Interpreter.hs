@@ -3,9 +3,8 @@
 module Calculator.Interpreter (Environment, defaultEnv, evalString,
                                evalStatement) where
 
-import Calculator.AST
-  (Expression (Add, Call, Divide, Multiply, Negate, Number, Raise, Subtract),
-   Statement (Binding, Expression))
+import Calculator.AST (Expression (Call, Number),
+                       Statement (Binding, Expression))
 import Calculator.Parser (parse)
 import Data.Maybe (isJust)
 import Text.Parsec.Error (ParseError)
@@ -19,9 +18,10 @@ data Function
   -- and a list of parameter names to add to the environment when the function
   -- is called.
   = Closure Environment [String] Expression
-  -- Native functions declare the number of arguments they accept, which are
-  -- passed to a Haskell function that takes those arguments as a list.
-  | Native Int ([Double] -> Double)
+  -- A native Haskell function with one parameter.
+  | Native1 (Double -> Double)
+  -- A native Haskell function with two parameters.
+  | Native2 (Double -> Double -> Double)
 
 -- An evaluation error.
 type EvalError = String
@@ -30,17 +30,24 @@ type EvalError = String
 defaultEnv :: Environment
 defaultEnv =
   Environment
-    [("pi", constant pi),
+    [("^", Native2 (**)),
+     ("neg", Native1 negate),
+     ("*", Native2 (*)),
+     ("/", Native2 (/)),
+     ("+", Native2 (+)),
+     ("-", Native2 (-)),
+     ("pi", constant pi),
      ("e", constant (exp 1)),
-     ("sin", Native 1 $ \[x] -> sin x),
-     ("cos", Native 1 $ \[x] -> cos x),
-     ("sqrt", Native 1 $ \[x] -> sqrt x),
-     ("cbrt", function["x"] (Call "root" [Call "x" [], Number 3.0])),
-     ("root", function ["x", "k"] $ Raise (Call "x" [])
-                                          (Divide (Number 1.0) (Call "k" []))),
-     ("ln", Native 1 $ \[x] -> log x),
-     ("log", function ["b", "x"] $ Divide (Call "ln" [Call "x" []])
-                                          (Call "ln" [Call "b" []])),
+     ("sin", Native1 sin),
+     ("cos", Native1 cos),
+     ("sqrt", Native1 sqrt),
+     ("cbrt", function["x"] $
+        Call "root" [Call "x" [], Number 3.0]),
+     ("root", function ["x", "k"] $
+        Call "^" [Call "x" [], Call "/" [Number 1.0, Call "k" []]]),
+     ("ln", Native1 log),
+     ("log", function ["b", "x"] $
+        Call "/" [Call "ln" [Call "x" []], Call "ln" [Call "b" []]]),
      ("log2", function ["x"] (Call "log" [Number 2.0, Call "x" []])),
      ("log10", function ["x"] (Call "log" [Number 10.0, Call "x" []]))]
 
@@ -55,51 +62,26 @@ function = Closure defaultEnv
 -- Evaluates an expression with the given environment.
 evalExpression :: Environment -> Expression -> Either EvalError Double
 evalExpression env = \case
-  Raise base power -> do
-    base' <- evalExpression env base
-    power' <- evalExpression env power
-    Right (base' ** power')
-  Negate e -> negate <$> evalExpression env e
-  Multiply e1 e2 -> do
-    v1 <- evalExpression env e1
-    v2 <- evalExpression env e2
-    Right (v1 * v2)
-  Divide num denom -> do
-    num' <- evalExpression env num
-    denom' <- evalExpression env denom
-    Right (num' / denom')
-  Add e1 e2 -> do
-    v1 <- evalExpression env e1
-    v2 <- evalExpression env e2
-    Right (v1 + v2)
-  Subtract e1 e2 -> do
-    v1 <- evalExpression env e1
-    v2 <- evalExpression env e2
-    Right (v1 - v2)
-  Call name args -> call name args env
   Number n -> return n
-
--- Calls a function in the environment with the given name and arguments.
-call :: String -> [Expression] -> Environment -> Either EvalError Double
-call name args env =
-  case lookup name (list env) of
-    Nothing -> Left ("undefined function or variable " ++ name)
-    Just (Closure env' params e)
-      | length args == 1 && null params -> do
-          -- Treat this as implicit multiplication.
-          v1 <- evalExpression env' e
-          v2 <- evalExpression env (head args)
-          Right (v1 * v2)
-      | length args /= length params ->
-          Left ("wrong number of arguments for function " ++ name)
-      | otherwise -> do
-          args' <- mapM (evalExpression env) args
-          let env'' = zip params (map constant args') ++ list env'
-          evalExpression (Environment env'') e
-    Just (Native arity f) ->
-      if length args /= arity
-      then Left ("wrong number of arguments for function " ++ name)
-      else f <$> mapM (evalExpression env) args
+  Call name args ->
+    case (args, lookup name (list env)) of
+      (_, Nothing) -> Left ("undefined function or variable " ++ name)
+      (_, Just (Closure env' params e))
+        | length args == 1 && null params -> do
+            -- Treat this as implicit multiplication.
+            v1 <- evalExpression env' e
+            v2 <- evalExpression env (head args)
+            Right (v1 * v2)
+        | length args == length params -> do
+            args' <- mapM (evalExpression env) args
+            let env'' = zip params (map constant args') ++ list env'
+            evalExpression (Environment env'') e
+      ([x], Just (Native1 f)) -> evalExpression env x >>= Right . f
+      ([x, y], Just (Native2 f)) -> do
+        x' <- evalExpression env x
+        y' <- evalExpression env y
+        Right (f x' y')
+      _ -> Left ("wrong number of arguments for function " ++ name)
 
 -- Evaluates a statement with the given environment. Returns the result, if any,
 -- and the new environment.

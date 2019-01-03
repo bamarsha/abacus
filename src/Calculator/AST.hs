@@ -1,14 +1,8 @@
 module Calculator.AST (Expression (..), Statement (..)) where
 
 -- A math expression.
-data Expression = Raise Expression Expression
-                | Negate Expression
-                | Multiply Expression Expression
-                | Divide Expression Expression
-                | Add Expression Expression
-                | Subtract Expression Expression
+data Expression = Number Double
                 | Call String [Expression]
-                | Number Double
   deriving Show
 
 -- A math statement.

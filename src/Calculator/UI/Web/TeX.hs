@@ -2,12 +2,11 @@
 
 module Calculator.UI.Web.TeX (fromStatement) where
 
-import Calculator.AST
-  (Expression (Add, Call, Divide, Multiply, Negate, Number, Raise, Subtract),
-   Statement (Binding, Expression))
+import Calculator.AST (Expression (Call, Number),
+                       Statement (Binding, Expression))
 import Calculator.Utils (showFloat)
 import Data.List (intercalate)
-import Data.Maybe (fromMaybe)
+import Text.Printf (printf)
 
 -- A math operator corresponding to a node in the AST.
 data Operator = Exponent
@@ -21,13 +20,6 @@ data Operator = Exponent
 -- The sides of an infix operator.
 data Side = LeftSide | RightSide
   deriving Eq
-
--- A list of special names that have TeX control sequences.
-specialNames :: [(String, String)]
-specialNames =
-  [("cos", "\\cos"),
-   ("pi", "\\pi"),
-   ("sin", "\\sin")]
 
 -- The precedence of an operator.
 precedence :: Operator -> Int
@@ -54,32 +46,32 @@ commutative _ = False
 -- Transforms an expression into TeX.
 fromExpression :: Maybe Operator -> Maybe Side -> Expression -> String
 fromExpression parent side = \case
-  Raise base power ->
-    let base' = fromExpression (Just Exponent) (Just LeftSide) base
-        power' = fromExpression (Just Exponent) (Just RightSide) power
-    in contextualParens parent side Exponent (base' ++ "^{" ++ power' ++ "}")
-  Negate e -> "-" ++ fromExpression (Just Negative) Nothing e
-  Multiply e1 e2 ->
-    let s1 = fromExpression (Just Times) (Just LeftSide) e1
-        s2 = fromExpression (Just Times) (Just RightSide) e2
-    in contextualParens parent side Times (s1 ++ "\\cdot " ++ s2)
-  Divide num denom ->
-    let num' = fromExpression (Just Division) (Just LeftSide) num
-        denom' = fromExpression (Just Division) (Just RightSide) denom
-    in contextualParens parent side Division
-                        ("\\frac{" ++ num' ++ "}{" ++ denom' ++ "}")
-  Add e1 e2 ->
-    let s1 = fromExpression (Just Plus) (Just LeftSide) e1
-        s2 = fromExpression (Just Plus) (Just RightSide) e2
-    in contextualParens parent side Plus (s1 ++ "+" ++ s2)
-  Subtract e1 e2 ->
-    let s1 = fromExpression (Just Minus) (Just LeftSide) e1
-        s2 = fromExpression (Just Minus) (Just RightSide) e2
-    in contextualParens parent side Minus (s1 ++ "-" ++ s2)
+  Call "^" [base, power] -> binary (Just Exponent) "%s^{%s}" base power
+  Call "neg" [x] -> unary (Just Negative) "-%s" x
+  Call "*" [x, y] -> binary (Just Times) "%s \\cdot %s" x y
+  Call "/" [num, denom] -> binary (Just Division) "\\frac{%s}{%s}" num denom
+  Call "+" [x, y] -> binary (Just Plus) "%s + %s" x y
+  Call "-" [x, y] -> binary (Just Minus) "%s - %s" x y
+  Call "pi" [] -> "\\pi"
+  Call "sin" [x] -> unary Nothing "\\sin(%s)" x
+  Call "cos" [x] -> unary Nothing "\\cos(%s)" x
+  Call "sqrt" [x] -> unary Nothing "\\sqrt{%s}" x
+  Call "cbrt" [x] -> unary Nothing "\\sqrt[3]{%s}" x
+  Call "root" [x, k] -> binary Nothing "\\sqrt[%s]{%s}" k x
+  Call "ln" [x] -> unary Nothing "\\ln(%s)" x
+  Call "log" [b, x] -> binary Nothing "\\log_{%s}{%s}" b x
+  Call "log2" [x] -> unary Nothing "\\log_2(%s)" x
+  Call "log10" [x] -> unary Nothing "\\log_{10}(%s)" x
   Call name args ->
     let args' = intercalate "," (map (fromExpression Nothing Nothing) args)
     in identifier name ++ (if null args' then "" else parens args')
   Number value -> showFloat value
+  where
+    unary op format x = printf format (fromExpression op Nothing x)
+    binary op format x y =
+      let x' = fromExpression op (Just LeftSide) x
+          y' = fromExpression op (Just RightSide) y
+      in contextualParens parent side op (printf format x' y')
 
 -- Transforms a statement into TeX.
 fromStatement :: Statement -> String
@@ -92,10 +84,9 @@ fromStatement (Binding name params e) =
 -- Formats an identifier as a TeX string.
 identifier :: String -> String
 identifier ident =
-  fromMaybe (if length ident > 1
-             then "\\mathrm{" ++ ident ++ "}"
-             else ident)
-            (lookup ident specialNames)
+  if length ident > 1
+  then "\\mathrm{" ++ ident ++ "}"
+  else ident
 
 -- Wraps a string with parentheses.
 parens :: String -> String
@@ -103,9 +94,9 @@ parens s = "(" ++ s ++ ")"
 
 -- Wraps a TeX expression with parentheses only if they are necessary from
 -- context.
-contextualParens :: Maybe Operator -> Maybe Side -> Operator -> String -> String
-contextualParens Nothing _ _ = id
-contextualParens (Just parent) side child =
+contextualParens :: Maybe Operator -> Maybe Side -> Maybe Operator -> String
+                 -> String
+contextualParens (Just parent) side (Just child) =
   if needsParens then parens else id
   where
     needsParens :: Bool
@@ -113,3 +104,4 @@ contextualParens (Just parent) side child =
       (precedence parent > precedence child ||
        precedence parent == precedence child && associativity parent /= side) &&
       not (parent == child && commutative parent)
+contextualParens _ _ _ = id

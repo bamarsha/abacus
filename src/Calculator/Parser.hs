@@ -2,9 +2,8 @@
 
 module Calculator.Parser (Calculator.Parser.parse) where
 
-import Calculator.AST
-  (Expression (Add, Call, Divide, Negate, Number, Multiply, Raise, Subtract),
-   Statement (Expression, Binding))
+import Calculator.AST (Expression (Call, Number),
+                       Statement (Expression, Binding))
 import Calculator.Tokenizer (Token (Identifier, NumberT, Operator, Symbol),
                              tokenize)
 import Calculator.Utils (intersperseWhen)
@@ -24,26 +23,32 @@ table =
   [
     [
       -- Special case for negative numbers in the exponent.
-      let negativeExponent = try $
-                             operator "^" >>
-                             operator "-" >>
-                             return (\x y -> Raise x (Negate y))
+      let negativeExponent = try $ operator "^" >> operator "-" >>
+                             return (\b -> call2 "^" b . call1 "neg")
       in Infix negativeExponent AssocRight,
 
-      Infix (operator "^" >> return Raise) AssocRight
+      Infix (operator "^" >> return (call2 "^")) AssocRight
     ],
     [
-      Prefix (operator "-" >> return Negate)
+      Prefix (operator "-" >> return (call1 "neg"))
     ],
     [
-      Infix (operator "*" >> return Multiply) AssocLeft,
-      Infix (operator "/" >> return Divide) AssocLeft
+      Infix (operator "*" >> return (call2 "*")) AssocLeft,
+      Infix (operator "/" >> return (call2 "/")) AssocLeft
     ],
     [
-      Infix (operator "+" >> return Add) AssocLeft,
-      Infix (operator "-" >> return Subtract) AssocLeft
+      Infix (operator "+" >> return (call2 "+")) AssocLeft,
+      Infix (operator "-" >> return (call2 "-")) AssocLeft
     ]
   ]
+
+-- Returns a Call expression with one argument.
+call1 :: String -> Expression -> Expression
+call1 name x = Call name [x]
+
+-- Returns a Call expression with two arguments.
+call2 :: String -> Expression -> Expression -> Expression
+call2 name x y = Call name [x, y]
 
 -- The parser satisfy f succeeds for any token for which the given function f
 -- returns True. Returns the token that is actually parsed.
