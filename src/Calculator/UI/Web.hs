@@ -45,7 +45,9 @@ buttonText =
    ("\\pi", "pi"),
    ("\\sin", "sin(x)"),
    ("\\cos", "cos(x)"),
-   ("\\tan", "tan(x)")]
+   ("\\tan", "tan(x)"),
+   (":=", "x = "),
+   ("f(x)", "f(x) = ")]
 
 -- Starts the GUI for the calculator.
 main :: IO ()
@@ -105,22 +107,35 @@ setup window = void $ mdo
 -- the new input string.
 insert :: Element -> Behavior String -> Handler String -> String -> UI ()
 insert input bInput fire command = do
-  -- Replace the selected text in the input box with the command.
-  start <- UI.callFunction $ getSelectionStart input
-  end <- UI.callFunction $ getSelectionEnd input
   str <- UI.currentValue bInput
-  let str' = replaceSublist start end command str
-
-  -- If the command is a function, select its arguments. Otherwise, put the
-  -- caret at the end of the command.
-  _ <- UI.element input # UI.set value' str'
-  let (start', end') = case (elemIndex '(' command, elemIndex ')' command) of
-                         (Just s, Just e) -> (start + s + 1, start + e)
-                         _ -> (start + length command, start + length command)
-  UI.runFunction $ setSelection start' end' input
+  -- Insert assignment commands at the beginning and all other commands at the
+  -- selection/cursor.
+  str' <- if '=' `elem` command
+          then atBeginning str
+          else replaceSelection str
   UI.setFocus input
-
   UI.liftIO $ fire str'
+  where
+    replaceSelection str = do
+      -- Replace the selected text in the input box with the command.
+      start <- UI.callFunction $ getSelectionStart input
+      end <- UI.callFunction $ getSelectionEnd input
+      let str' = replaceSublist start end command str
+
+      -- If the command is a function, select its arguments. Otherwise, put the
+      -- caret at the end of the command.
+      _ <- UI.element input # UI.set value' str'
+      let (start', end') =
+            case (elemIndex '(' command, elemIndex ')' command) of
+              (Just s, Just e) -> (start + s + 1, start + e)
+              _ -> (start + length command, start + length command)
+      UI.runFunction $ setSelection start' end' input
+      return str'
+
+    atBeginning str = do
+      let str' = command ++ str
+      _ <- UI.element input # UI.set value' str'
+      return str'
 
 -- Evaluates the input with the current environment and returns either an error
 -- message (Left) or the result (Right).
