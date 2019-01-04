@@ -59,7 +59,7 @@ fromExpression parent side = \case
   Call "cbrt" [x] -> unary Nothing "\\sqrt[3]{%s}" x
   Call "root" [x, k] -> binary Nothing "\\sqrt[%s]{%s}" k x
   Call "ln" [x] -> unary Nothing "\\ln(%s)" x
-  Call "log" [b, x] -> binary Nothing "\\log_{%s}{%s}" b x
+  Call "log" [b, x] -> binary Nothing "\\log_{%s}(%s)" b x
   Call "log2" [x] -> unary Nothing "\\log_2(%s)" x
   Call "log10" [x] -> unary Nothing "\\log_{10}(%s)" x
   Call name args ->
