@@ -90,7 +90,7 @@ evalStatement :: Environment -> Statement
               -> Either EvalError (Environment, Maybe Double)
 evalStatement env (Expression e) = do
   result <- evalExpression env e
-  Right (env, Just result)
+  Right (Environment $ ("ans", constant result) : list env, Just result)
 evalStatement env (Binding name params e)
   | isJust $ lookup name (list defaultEnv) =
       Left ("can't redefine built-in function or variable " ++ name)
