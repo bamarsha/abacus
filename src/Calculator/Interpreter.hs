@@ -40,6 +40,7 @@ defaultEnv =
      ("e", constant (exp 1)),
      ("sin", Native1 sin),
      ("cos", Native1 cos),
+     ("tan", Native1 tan),
      ("sqrt", Native1 sqrt),
      ("cbrt", function["x"] $
         Call "root" [Call "x" [], Number 3.0]),

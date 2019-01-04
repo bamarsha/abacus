@@ -29,8 +29,11 @@ function startServer(port) {
 
 app.on("ready", () => {
   let window = new BrowserWindow({
-    width: 300,
-    height: 300,
+    width: 330,
+    height: 350,
+    minWidth: 260,
+    minHeight: 350,
+    useContentSize: true,
     title: "Calculator",
     show: false,
     webPreferences: { nodeIntegration: true }

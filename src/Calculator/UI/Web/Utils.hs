@@ -1,4 +1,6 @@
-module Calculator.UI.Web.Utils (alert, value', addScript) where
+module Calculator.UI.Web.Utils
+  (alert, value', addScript, renderKatex, getSelectionStart, getSelectionEnd,
+   setSelection) where
 
 import Control.Monad (void)
 import qualified Graphics.UI.Threepenny as UI
@@ -29,3 +31,19 @@ addScript window filename = void $ do
             UI.set (UI.attr "type") "text/javascript" #
             UI.set (UI.attr "src") ("/static/js/" ++ filename)
   UI.getHead window #+ [UI.element script]
+
+-- Renders a TeX string to the element using KaTeX.
+renderKatex :: String -> Element -> JSFunction ()
+renderKatex = UI.ffi "katex.render(%1, %2, { displayMode: true })"
+
+-- Returns the starting index of the input element's selection.
+getSelectionStart :: Element -> JSFunction Int
+getSelectionStart = UI.ffi "%1.selectionStart"
+
+-- Returns the ending index of the input element's selection.
+getSelectionEnd :: Element -> JSFunction Int
+getSelectionEnd = UI.ffi "%1.selectionEnd"
+
+-- Sets the starting and ending indices of the input element's selection.
+setSelection :: Int -> Int -> Element -> JSFunction ()
+setSelection = UI.ffi "%3.setSelectionRange(%1, %2)"

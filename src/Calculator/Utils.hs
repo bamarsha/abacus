@@ -1,4 +1,4 @@
-module Calculator.Utils (showFloat, intersperseWhen) where
+module Calculator.Utils (showFloat, intersperseWhen, replaceSublist) where
 
 import Data.Text.Format (shortest)
 import Data.Text.Lazy (unpack)
@@ -17,3 +17,10 @@ intersperseWhen f sep (x1 : x2 : xs) =
   then x1 : sep : intersperseWhen f sep (x2 : xs)
   else x1 : intersperseWhen f sep (x2 : xs)
 intersperseWhen _ _ [x] = [x]
+
+-- Replaces the sublist from start to end in xs with ys.
+replaceSublist :: Int -> Int -> [a] -> [a] -> [a]
+replaceSublist start end ys xs =
+  let left = take start xs
+      right = drop end xs
+  in left ++ ys ++ right
