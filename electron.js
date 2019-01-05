@@ -2,6 +2,7 @@ const { BrowserWindow, app } = require("electron");
 const freeport = require("freeport");
 const spawn = require("child_process").spawn;
 const path = require("path");
+const readline = require("readline");
 
 // Starts the Threepenny server.
 function startServer(port) {
@@ -39,11 +40,15 @@ app.on("ready", () => {
     const server = startServer(port);
 
     // Wait for the server to start, then open it in the window.
-    server.stderr.on("data", data => {
-      if (data.startsWith("Listening on ")) {
-        const url = data.substring("Listening on ".length);
+    const rl = readline.createInterface({
+      input: server.stderr
+    });
+    rl.on("line", function waitForListen(line) {
+      if (line.startsWith("Listening on ")) {
+        const url = line.substring("Listening on ".length);
         console.log(`Loading URL: ${url}`);
         window.loadURL(url);
+        rl.removeListener("line", waitForListen);
       }
     });
   });
