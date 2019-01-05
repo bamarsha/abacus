@@ -2,18 +2,10 @@ const { BrowserWindow, app } = require("electron");
 const freeport = require("freeport");
 const spawn = require("child_process").spawn;
 const path = require("path");
-const glob = require("glob");
-
-// Returns the path to the Threepenny server executable.
-function executablePath() {
-  const pattern = ("dist-newstyle/build/*/ghc-*/calculator-*/x/" +
-                   "calculator-web/build/calculator-web/calculator-web");
-  return glob.sync(path.join(__dirname, pattern))[0];
-}
 
 // Starts the Threepenny server.
 function startServer(port) {
-  const server = spawn(executablePath(), [port]);
+  const server = spawn(path.join(__dirname, "calculator-web"), [port]);
   server.stdout.setEncoding("utf8");
   server.stderr.setEncoding("utf8");
   server.stdout.on("data", console.log);
@@ -47,7 +39,7 @@ app.on("ready", () => {
     const server = startServer(port);
 
     // Wait for the server to start, then open it in the window.
-    server.stderr.once("data", data => {
+    server.stderr.on("data", data => {
       if (data.startsWith("Listening on ")) {
         const url = data.substring("Listening on ".length);
         console.log(`Loading URL: ${url}`);

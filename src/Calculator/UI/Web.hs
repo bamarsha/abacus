@@ -20,7 +20,8 @@ import qualified Graphics.UI.Threepenny as UI
 import Graphics.UI.Threepenny.Core (Behavior, Element, Event, Handler, UI,
                                     Window, (#), (#+), (#.), (<@))
 
-import System.Environment (getArgs)
+import System.Environment (getArgs, getExecutablePath)
+import System.FilePath (takeDirectory)
 
 -- The result of evaluating the calculator's input.
 data Result = Result { _inputStatement :: Statement,
@@ -54,8 +55,9 @@ main :: IO ()
 main = do
   args <- getArgs
   let port = read <$> listToMaybe args
+  static <- takeDirectory <$> getExecutablePath
   UI.startGUI UI.defaultConfig { UI.jsPort = port,
-                                 UI.jsStatic = Just ".",
+                                 UI.jsStatic = Just static,
                                  UI.jsWindowReloadOnDisconnect = False }
               setup
 

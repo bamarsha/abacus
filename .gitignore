@@ -6,3 +6,7 @@
 /dist
 /dist-newstyle
 /node_modules
+
+/Calculator-*
+/calculator-console
+/calculator-web

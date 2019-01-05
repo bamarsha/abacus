@@ -9,12 +9,19 @@ version:             0.1.0.0
 -- description:
 -- bug-reports:
 license:             NONE
-license-file:        LICENSE
+-- license-file:
 author:              Sarah Marshall
 maintainer:          marshallsaraha@gmail.com
 -- copyright:
 category:            Math
 extra-source-files:  CHANGELOG.md
+build-type:          Custom
+
+custom-setup
+  setup-depends:       Cabal,
+                       base ^>=4.11.1.0,
+                       filepath ^>=1.4.2.1,
+                       directory ^>=1.3.1.5
 
 common modules
   other-modules:       Calculator.AST,
@@ -42,6 +49,7 @@ executable calculator-web
   other-modules:       Calculator.UI.Web.TeX,
                        Calculator.UI.Web.Utils
   build-depends:       either ^>=5.0.1,
+                       filepath ^>=1.4.2.1,
                        safe ^>=0.3.17,
                        threepenny-gui ^>=0.8.3.0
   ghc-options:         -main-is Calculator.UI.Web
