@@ -103,7 +103,9 @@ setup window = void $ mdo
 
   -- Show an alert if an error happens.
   let eEvalError = UI.filterJust $ leftToMaybe <$> eEval
-  UI.onEvent eEvalError $ UI.runFunction . alert
+  _ <- UI.onEvent eEvalError $ UI.runFunction . alert
+
+  UI.runFunction $ UI.ffi "require('electron').ipcRenderer.send('did-setup')"
 
 -- Inserts the command into the input box and fire the given event handler with
 -- the new input string.

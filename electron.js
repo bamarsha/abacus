@@ -1,4 +1,4 @@
-const { BrowserWindow, app } = require("electron");
+const { BrowserWindow, app, ipcMain } = require("electron");
 const freeport = require("freeport");
 const spawn = require("child_process").spawn;
 const path = require("path");
@@ -31,7 +31,7 @@ app.on("ready", () => {
     show: false,
     webPreferences: { nodeIntegration: true }
   });
-  window.once("ready-to-show", () => window.show());
+  ipcMain.on("did-setup", () => window.show());
 
   // Find a random port to run on.
   freeport((error, port) => {
