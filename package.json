@@ -11,6 +11,6 @@
   },
   "scripts": {
     "start": "electron electron.js",
-    "package": "electron-packager . --ignore src --ignore dist-newstyle"
+    "package": "electron-packager . --icon abacus --ignore src --ignore dist-newstyle"
   }
 }
