@@ -1,5 +1,5 @@
 {
-  "name": "Calculator",
+  "name": "Abacus",
   "main": "electron.js",
   "dependencies": {
     "freeport": "^1.0.5",

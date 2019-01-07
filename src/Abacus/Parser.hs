@@ -1,12 +1,11 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Calculator.Parser (Calculator.Parser.parse) where
+module Abacus.Parser (Abacus.Parser.parse) where
 
-import Calculator.AST (Expression (Call, Number),
-                       Statement (Expression, Binding))
-import Calculator.Tokenizer (Token (Identifier, NumberT, Operator, Symbol),
-                             tokenize)
-import Calculator.Utils (intersperseWhen)
+import Abacus.AST (Expression (Call, Number), Statement (Expression, Binding))
+import Abacus.Tokenizer (Token (Identifier, NumberT, Operator, Symbol),
+                         tokenize)
+import Abacus.Utils (intersperseWhen)
 
 import Data.Functor.Identity (Identity)
 

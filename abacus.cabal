@@ -3,7 +3,7 @@ cabal-version:       2.2
 -- init'.  For further documentation, see
 -- http://haskell.org/cabal/users-guide/
 
-name:                calculator
+name:                abacus
 version:             0.1.0.0
 -- synopsis:
 -- description:
@@ -24,11 +24,11 @@ custom-setup
                        directory ^>=1.3.1.5
 
 common modules
-  other-modules:       Calculator.AST,
-                       Calculator.Interpreter,
-                       Calculator.Parser,
-                       Calculator.Tokenizer,
-                       Calculator.Utils
+  other-modules:       Abacus.AST,
+                       Abacus.Interpreter,
+                       Abacus.Parser,
+                       Abacus.Tokenizer,
+                       Abacus.Utils
   build-depends:       base ^>=4.11.1.0,
                        parsec ^>=3.1.13.0,
                        text ^>=1.2.3.1,
@@ -37,19 +37,19 @@ common modules
   hs-source-dirs:      src
   ghc-options:         -Wall
 
-executable calculator-console
+executable abacus-console
   import:              modules
-  main-is:             Calculator/UI/Console.hs
+  main-is:             Abacus/UI/Console.hs
   build-depends:       haskeline ^>=0.7.4.3
-  ghc-options:         -main-is Calculator.UI.Console
+  ghc-options:         -main-is Abacus.UI.Console
 
-executable calculator-web
+executable abacus-web
   import:              modules
-  main-is:             Calculator/UI/Web.hs
-  other-modules:       Calculator.UI.Web.TeX,
-                       Calculator.UI.Web.Utils
+  main-is:             Abacus/UI/Web.hs
+  other-modules:       Abacus.UI.Web.TeX,
+                       Abacus.UI.Web.Utils
   build-depends:       either ^>=5.0.1,
                        filepath ^>=1.4.2.1,
                        safe ^>=0.3.17,
                        threepenny-gui ^>=0.8.3.0
-  ghc-options:         -main-is Calculator.UI.Web
+  ghc-options:         -main-is Abacus.UI.Web

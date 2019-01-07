@@ -1,4 +1,4 @@
-module Calculator.Tokenizer (Token (..), tokenize) where
+module Abacus.Tokenizer (Token (..), tokenize) where
 
 import Control.Applicative (empty)
 import Data.Functor.Identity (Identity)

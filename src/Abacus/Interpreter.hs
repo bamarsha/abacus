@@ -1,11 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Calculator.Interpreter (Environment, defaultEnv, evalString,
-                               evalStatement) where
+module Abacus.Interpreter (Environment, defaultEnv, evalString, evalStatement)
+where
 
-import Calculator.AST (Expression (Call, Number),
-                       Statement (Binding, Expression))
-import Calculator.Parser (parse)
+import Abacus.AST (Expression (Call, Number), Statement (Binding, Expression))
+import Abacus.Parser (parse)
 import Data.Maybe (isJust)
 import Text.Parsec.Error (ParseError)
 

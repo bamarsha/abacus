@@ -1,4 +1,4 @@
-module Calculator.AST (Expression (..), Statement (..)) where
+module Abacus.AST (Expression (..), Statement (..)) where
 
 -- A math expression.
 data Expression = Number Double

@@ -1,10 +1,9 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Calculator.UI.Web.TeX (fromStatement) where
+module Abacus.UI.Web.TeX (fromStatement) where
 
-import Calculator.AST (Expression (Call, Number),
-                       Statement (Binding, Expression))
-import Calculator.Utils (showFloat)
+import Abacus.AST (Expression (Call, Number), Statement (Binding, Expression))
+import Abacus.Utils (showFloat)
 import Data.List (intercalate)
 import Text.Printf (printf)
 

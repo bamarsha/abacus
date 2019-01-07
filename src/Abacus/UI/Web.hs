@@ -1,15 +1,15 @@
 {-# LANGUAGE RecursiveDo #-}
 
-module Calculator.UI.Web (main) where
+module Abacus.UI.Web (main) where
 
-import Calculator.AST (Statement)
-import Calculator.Interpreter (Environment, defaultEnv, evalStatement)
-import Calculator.Parser (parse)
-import Calculator.UI.Web.TeX (fromStatement)
-import Calculator.UI.Web.Utils
+import Abacus.AST (Statement)
+import Abacus.Interpreter (Environment, defaultEnv, evalStatement)
+import Abacus.Parser (parse)
+import Abacus.UI.Web.TeX (fromStatement)
+import Abacus.UI.Web.Utils
   (addScript, alert, getSelectionEnd, getSelectionStart, renderKatex,
    setSelection, value')
-import Calculator.Utils (showFloat, replaceSublist)
+import Abacus.Utils (showFloat, replaceSublist)
 
 import Control.Monad (void)
 import Data.Either.Combinators (leftToMaybe, rightToMaybe)
@@ -64,8 +64,8 @@ main = do
 -- Sets up the main window.
 setup :: Window -> UI ()
 setup window = void $ mdo
-  _ <- return window # UI.set UI.title "Calculator"
-  UI.addStyleSheet window "calculator.css"
+  _ <- return window # UI.set UI.title "Abacus"
+  UI.addStyleSheet window "abacus.css"
   UI.addStyleSheet window "../node_modules/katex/dist/katex.min.css"
   addScript window "../node_modules/katex/dist/katex.min.js"
 

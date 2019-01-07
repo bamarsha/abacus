@@ -1,4 +1,4 @@
-module Calculator.UI.Web.Utils
+module Abacus.UI.Web.Utils
   (alert, value', addScript, renderKatex, getSelectionStart, getSelectionEnd,
    setSelection) where
 

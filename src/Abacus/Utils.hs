@@ -1,4 +1,4 @@
-module Calculator.Utils (showFloat, intersperseWhen, replaceSublist) where
+module Abacus.Utils (showFloat, intersperseWhen, replaceSublist) where
 
 import Data.Text.Format (shortest)
 import Data.Text.Lazy (unpack)

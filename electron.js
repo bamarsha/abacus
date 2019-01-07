@@ -6,7 +6,7 @@ const readline = require("readline");
 
 // Starts the Threepenny server.
 function startServer(port) {
-  const server = spawn(path.join(__dirname, "calculator-web"), [port]);
+  const server = spawn(path.join(__dirname, "abacus-web"), [port]);
   server.stdout.setEncoding("utf8");
   server.stderr.setEncoding("utf8");
   server.stdout.on("data", console.log);
@@ -27,7 +27,7 @@ app.on("ready", () => {
     minWidth: 260,
     minHeight: 350,
     useContentSize: true,
-    title: "Calculator",
+    title: "Abacus",
     show: false,
     webPreferences: { nodeIntegration: true }
   });

@@ -1,7 +1,7 @@
-module Calculator.UI.Console (main) where
+module Abacus.UI.Console (main) where
 
-import Calculator.Interpreter (Environment, defaultEnv, evalString)
-import Calculator.Utils (showFloat)
+import Abacus.Interpreter (Environment, defaultEnv, evalString)
+import Abacus.Utils (showFloat)
 import System.Console.Haskeline (InputT, defaultSettings, getInputLine,
                                  outputStrLn, runInputT)
 
