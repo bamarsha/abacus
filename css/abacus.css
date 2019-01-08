@@ -20,7 +20,7 @@ dl {
     flex-grow: 1;
 }
 .item {
-    margin-top: 10px;
+    margin: 10px 0;
 }
 dt, dd {
     padding: 0 10px;
@@ -52,7 +52,6 @@ input {
     border-left: none;
     background: #fafafa;
     padding: 10px;
-    margin-top: 10px;
     outline: none;
 }
 
