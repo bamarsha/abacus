@@ -52,15 +52,15 @@ fromExpression parent side = \case
   Call "+" [x, y] -> binary (Just Plus) "%s + %s" x y
   Call "-" [x, y] -> binary (Just Minus) "%s - %s" x y
   Call "pi" [] -> "\\pi"
-  Call "sin" [x] -> unary Nothing "\\sin(%s)" x
-  Call "cos" [x] -> unary Nothing "\\cos(%s)" x
+  Call "sin" [x] -> unary Nothing "\\sin \\left( %s \\right)" x
+  Call "cos" [x] -> unary Nothing "\\cos \\left( %s \\right)" x
   Call "sqrt" [x] -> unary Nothing "\\sqrt{%s}" x
   Call "cbrt" [x] -> unary Nothing "\\sqrt[3]{%s}" x
   Call "root" [x, k] -> binary Nothing "\\sqrt[%s]{%s}" k x
-  Call "ln" [x] -> unary Nothing "\\ln(%s)" x
-  Call "log" [b, x] -> binary Nothing "\\log_{%s}(%s)" b x
-  Call "log2" [x] -> unary Nothing "\\log_2(%s)" x
-  Call "log10" [x] -> unary Nothing "\\log_{10}(%s)" x
+  Call "ln" [x] -> unary Nothing "\\ln \\left( %s \\right)" x
+  Call "log" [b, x] -> binary Nothing "\\log_{%s} \\left( %s \\right)" b x
+  Call "log2" [x] -> unary Nothing "\\log_2 \\left( %s \\right)" x
+  Call "log10" [x] -> unary Nothing "\\log_{10} \\left( %s \\right)" x
   Call name args ->
     let args' = intercalate "," (map (fromExpression Nothing Nothing) args)
     in identifier name ++ (if null args' then "" else parens args')
@@ -89,7 +89,7 @@ identifier ident =
 
 -- Wraps a string with parentheses.
 parens :: String -> String
-parens s = "(" ++ s ++ ")"
+parens s = "\\left(" ++ s ++ "\\right)"
 
 -- Wraps a TeX expression with parentheses only if they are necessary from
 -- context.
