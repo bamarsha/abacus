@@ -1,6 +1,6 @@
 {
   "name": "Abacus",
-  "main": "electron.js",
+  "main": "main.js",
   "dependencies": {
     "freeport": "^1.0.5",
     "katex": "^0.10.0"
