@@ -10,7 +10,7 @@
     "electron-packager": "^13.0.1"
   },
   "scripts": {
-    "start": "electron electron.js",
+    "start": "electron main.js",
     "package": "electron-packager . --icon abacus --ignore src --ignore dist-newstyle"
   }
 }
