@@ -6,8 +6,8 @@ import Distribution.Types.LocalBuildInfo (LocalBuildInfo, buildDir)
 import Distribution.Types.PackageDescription (PackageDescription, executables)
 import Distribution.Types.UnqualComponentName (unUnqualComponentName)
 
-import System.Directory (copyFile)
-import System.FilePath ((</>))
+import System.Directory (copyFile, exeExtension)
+import System.FilePath ((</>), (<.>))
 
 -- Runs the custom build with hooks.
 main :: IO ()
@@ -19,6 +19,7 @@ postBuildHook :: Args -> BuildFlags -> PackageDescription -> LocalBuildInfo
 postBuildHook _ _ desc info = do
   let dir = buildDir info
   let exePaths = map (\exe -> let name = unUnqualComponentName (exeName exe)
-                              in (dir </> name </> name, name))
+                              in (dir </> name </> name <.> exeExtension,
+                                  name <.> exeExtension))
                      (executables desc)
   mapM_ (uncurry copyFile) exePaths
