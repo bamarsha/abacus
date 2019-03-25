@@ -6,8 +6,8 @@
     "katex": "^0.10.0"
   },
   "devDependencies": {
-    "electron": "^1.8.8",
-    "electron-packager": "^13.0.1"
+    "electron": "^4.1.1",
+    "electron-packager": "^13.1.1"
   },
   "scripts": {
     "start": "electron main.js",
