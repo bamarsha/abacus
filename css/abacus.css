@@ -27,9 +27,12 @@ dt, dd {
     padding: 0 10px;
 }
 dt {
-    opacity: 0.75;
+    opacity: 0.8;
     transition: opacity 0.2s;
     overflow: auto hidden;
+}
+dt .katex {
+    font-size: 13pt !important;
 }
 dt .katex-display > .katex {
     text-align: left;
@@ -39,6 +42,9 @@ dt:hover {
 }
 dd {
     margin-left: 0;
+}
+dd .katex {
+    font-size: 15pt !important;
 }
 dd .katex-display > .katex {
     text-align: right;
@@ -78,9 +84,6 @@ input {
 }
 
 /* KaTeX */
-.katex {
-    font-size: 13pt !important;
-}
 .katex-display {
     margin: 0 !important;
     padding: 2px 0;
