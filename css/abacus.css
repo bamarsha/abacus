@@ -80,6 +80,9 @@ input {
 .panel button:focus {
     outline: solid #ff0052;
 }
+.panel button .katex {
+    font-size: 13pt;
+}
 
 /* KaTeX */
 .katex-display {
