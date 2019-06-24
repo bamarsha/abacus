@@ -1,11 +1,24 @@
 module Abacus.UI.Web.Utils
-  (alert, value', addScript, renderKatex, getSelectionStart, getSelectionEnd,
-   setSelection) where
+    ( alert
+    , value'
+    , addScript
+    , renderKatex
+    , getSelectionStart
+    , getSelectionEnd
+    , setSelection
+    ) where
 
 import Control.Monad (void)
 import qualified Graphics.UI.Threepenny as UI
-import Graphics.UI.Threepenny.Core (Attr, Element, JSFunction, UI, Window, (#),
-                                    (#+))
+import Graphics.UI.Threepenny.Core
+    ( Attr
+    , Element
+    , JSFunction
+    , UI
+    , Window
+    , (#)
+    , (#+)
+    )
 
 -- Displays an alert dialog with a message.
 alert :: String -> JSFunction ()
@@ -21,16 +34,18 @@ value' = UI.mkReadWriteAttr get set
   where
     get = UI.get' UI.value
     set v el =
-      UI.runFunction $ UI.ffi "if ($(%1).val() != %2) $(%1).val(%2)" el v
+        UI.runFunction $ UI.ffi "if ($(%1).val() != %2) $(%1).val(%2)" el v
 
 -- Adds a script to the head. The filename is relative to the "/static/js"
 -- directory.
 addScript :: Window -> FilePath -> UI ()
-addScript window filename = void $ do
-  script <- UI.mkElement "script" #
+addScript window filename =
+    void $ do
+        script <-
+            UI.mkElement "script" #
             UI.set (UI.attr "type") "text/javascript" #
             UI.set (UI.attr "src") ("/static/js/" ++ filename)
-  UI.getHead window #+ [UI.element script]
+        UI.getHead window #+ [UI.element script]
 
 -- Renders a TeX string to the element using KaTeX.
 renderKatex :: String -> Element -> JSFunction ()
