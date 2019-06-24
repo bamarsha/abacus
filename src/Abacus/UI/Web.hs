@@ -5,7 +5,12 @@ module Abacus.UI.Web
     ) where
 
 import Abacus.AST (Statement)
-import Abacus.Interpreter (Environment, defaultEnv, evalStatement)
+import Abacus.Interpreter
+    ( Environment
+    , InterpretError(ParseError)
+    , defaultEnv
+    , evalStatement
+    )
 import Abacus.Parser (parse)
 import Abacus.UI.Web.TeX (fromStatement)
 import Abacus.UI.Web.Utils
@@ -20,7 +25,7 @@ import Abacus.UI.Web.Utils
 import Abacus.Utils (replaceSublist, showFloat)
 
 import Control.Monad (void)
-import Data.Either.Combinators (leftToMaybe, rightToMaybe)
+import Data.Either.Combinators (leftToMaybe, mapLeft, rightToMaybe)
 import Data.List (elemIndex)
 import Data.Maybe (listToMaybe)
 
@@ -172,13 +177,10 @@ insert input bInput fire command = do
 -- Evaluates the input with the current environment and returns either an error
 -- message (Left) or the result (Right).
 evalInput :: (Environment, String) -> Either String Result
-evalInput (env, input) =
-    case parse input of
-        Left err -> Left (show err)
-        Right statement ->
-            case evalStatement env statement of
-                Left err -> Left err
-                Right (env', value) -> Right (Result statement value env')
+evalInput (env, input) = do
+    statement <- mapLeft (show . ParseError . show) $ parse input
+    (env', value) <- mapLeft show $ evalStatement env statement
+    return $ Result statement value env'
 
 -- Adds a result to the history.
 addHistory :: Element -> Element -> Result -> UI ()

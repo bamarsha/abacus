@@ -2,6 +2,7 @@
 
 module Abacus.Interpreter
     ( Environment
+    , InterpretError(..)
     , defaultEnv
     , evalString
     , evalStatement
@@ -9,14 +10,12 @@ module Abacus.Interpreter
 
 import Abacus.AST (Expression(Call, Number), Statement(Binding, Expression))
 import Abacus.Parser (parse)
+
+import Data.Either.Combinators (mapLeft)
 import Data.Maybe (isJust)
-import Text.Parsec.Error (ParseError)
 
 -- Maps names to functions that can be called by other expressions.
-newtype Environment =
-    Environment
-        { list :: [(String, Function)]
-        }
+newtype Environment = Environment { list :: [(String, Function)] }
 
 -- A function that can be called from the environment.
 data Function
@@ -29,8 +28,15 @@ data Function
     -- A native Haskell function with two parameters.
     | Native2 (Double -> Double -> Double)
 
--- An evaluation error.
-type EvalError = String
+-- An interpreter error.
+data InterpretError
+    = EvalError String
+    | ParseError String
+
+instance Show InterpretError where
+    show (EvalError message) = "Evaluation Error: " ++ message
+    show (ParseError message) =
+        "Parse Error " ++ map (\c -> if c == '\n' then ' ' else c) message
 
 -- The default environment.
 defaultEnv :: Environment
@@ -71,12 +77,13 @@ function :: [String] -> Expression -> Function
 function = Closure defaultEnv
 
 -- Evaluates an expression with the given environment.
-evalExpression :: Environment -> Expression -> Either EvalError Double
+evalExpression :: Environment -> Expression -> Either InterpretError Double
 evalExpression env = \case
     Number n -> return n
     Call name args ->
         case (args, lookup name (list env)) of
-            (_, Nothing) -> Left ("undefined function or variable " ++ name)
+            (_, Nothing) ->
+                Left $ EvalError ("undefined function or variable " ++ name)
             (_, Just (Closure env' params e))
                 | length args == 1 && null params -> do
                     -- Treat this as implicit multiplication.
@@ -92,18 +99,23 @@ evalExpression env = \case
                 x' <- evalExpression env x
                 y' <- evalExpression env y
                 Right (f x' y')
-            _ -> Left ("wrong number of arguments for function " ++ name)
+            _ ->
+                Left $
+                EvalError ("wrong number of arguments for function " ++ name)
 
 -- Evaluates a statement with the given environment. Returns the result, if any,
 -- and the new environment.
 evalStatement ::
-       Environment -> Statement -> Either EvalError (Environment, Maybe Double)
+       Environment
+    -> Statement
+    -> Either InterpretError (Environment, Maybe Double)
 evalStatement env (Expression e) = do
     result <- evalExpression env e
     Right (Environment $ ("ans", constant result) : list env, Just result)
 evalStatement env (Binding name params e)
     | isJust $ lookup name (list defaultEnv) =
-        Left ("can't redefine built-in function or variable " ++ name)
+        Left $
+        EvalError ("can't redefine built-in function or variable " ++ name)
     | null params = do
         result <- evalExpression env e
         Right (Environment $ (name, constant result) : list env, Just result)
@@ -115,8 +127,7 @@ evalStatement env (Binding name params e)
 evalString ::
        Environment
     -> String
-    -> Either ParseError (Either EvalError (Environment, Maybe Double))
-evalString env str =
-    case parse str of
-        Left err -> Left err
-        Right statement -> Right (evalStatement env statement)
+    -> Either InterpretError (Environment, Maybe Double)
+evalString env str = do
+    statement <- mapLeft (ParseError . show) $ parse str
+    evalStatement env statement

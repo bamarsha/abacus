@@ -1,3 +1,5 @@
+{-# LANGUAGE LambdaCase #-}
+
 module Abacus.UI.Console
     ( main
     ) where
@@ -18,14 +20,12 @@ main = runInputT defaultSettings (repl defaultEnv)
 
 -- The read-eval-print loop.
 repl :: Environment -> InputT IO ()
-repl env = do
-    maybeLine <- getInputLine "= "
-    case maybeLine of
-        Nothing -> return ()
+repl env =
+    getInputLine "= " >>= \case
         Just line ->
             case evalString env line of
-                Left parseError -> outputStrLn (show parseError) >> repl env
-                Right (Left evalError) -> outputStrLn evalError >> repl env
-                Right (Right (env', Nothing)) -> repl env'
-                Right (Right (env', Just result)) ->
+                Left err -> outputStrLn (show err) >> repl env
+                Right (env', Nothing) -> repl env'
+                Right (env', Just result) ->
                     outputStrLn (showFloat result) >> repl env'
+        Nothing -> return ()
