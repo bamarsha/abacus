@@ -1,12 +1,4 @@
-.DS_Store
-*~
-
 /.ghc.environment.*
-/.stack-work
 /cabal.project.local
-/dist
 /dist-newstyle
 /node_modules
-
-/Abacus-*
-/abacus-*
