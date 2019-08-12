@@ -22,6 +22,7 @@ executable abacus
     Abacus.Interpreter,
     Abacus.Parser,
     Abacus.Tokenizer,
+    Abacus.UI.Web.History,
     Abacus.UI.Web.TeX,
     Abacus.Utils
   default-language: Haskell2010

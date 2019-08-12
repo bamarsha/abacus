@@ -1,6 +1,4 @@
-{-# LANGUAGE MonoLocalBinds #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE MonoLocalBinds, OverloadedStrings, RecursiveDo #-}
 
 module Abacus.UI.Web
     ( main
@@ -8,28 +6,31 @@ module Abacus.UI.Web
 where
 
 import Abacus.Interpreter
+import Abacus.UI.Web.History
 import Abacus.Utils
-import Control.Monad
-import Data.Text
+import Data.Maybe
+import Data.Text hiding (empty)
 import Reflex.Dom
 
 main :: IO ()
 main = mainWidget $ el "div" $ do
     submitted <- inputBox
-    let getValue = pack . maybe "" showFloat . snd <$> filterRight submitted
-    let getError = pack . either show (const "") <$> submitted
-    el "div" $ holdDyn "" getValue >>= dynText
-    el "div" $ holdDyn "" getError >>= dynText
+    let newValue = pack . maybe "" showFloat . snd <$> filterRight submitted
+    let newError = pack . either show (const "") <$> submitted
+    el "div" $ holdDyn "" newValue >>= dynText
+    el "div" $ holdDyn "" newError >>= dynText
 
 inputBox :: MonadWidget t m => m (Event t InterpretResult)
 inputBox = el "div" $ mdo
     input <- textInput $ def
-        & textInputConfig_setValue .~ (const "" <$> filterRight submitted)
+        & textInputConfig_setValue .~ (fromMaybe "" . now <$> historyChanged)
     clicked <- button "="
-    let entered = void $ ffilter isEnter (_textInput_keypress input)
     let submitted = evalString defaultEnv . unpack <$> tagPromptlyDyn
             (_textInput_value input)
-            (clicked <> entered)
+            (clicked <> keypress Enter input)
+    historyChanged <- accum (&) empty $ leftmost
+        [ record <$> current (_textInput_value input) <@ filterRight submitted
+        , const back <$> keydown ArrowUp input
+        , const forward <$> keydown ArrowDown input
+        ]
     return submitted
-  where
-    isEnter code = keyCodeLookup (fromIntegral code) == Enter
