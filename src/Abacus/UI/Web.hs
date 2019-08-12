@@ -1,5 +1,6 @@
 {-# LANGUAGE MonoLocalBinds #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecursiveDo #-}
 
 module Abacus.UI.Web
     ( main
@@ -21,12 +22,14 @@ main = mainWidget $ el "div" $ do
     el "div" $ holdDyn "" getError >>= dynText
 
 inputBox :: MonadWidget t m => m (Event t InterpretResult)
-inputBox = el "div" $ do
-    input <- textInput def
+inputBox = el "div" $ mdo
+    input <- textInput $ def
+        & textInputConfig_setValue .~ (const "" <$> filterRight submitted)
     clicked <- button "="
     let entered = void $ ffilter isEnter (_textInput_keypress input)
-    return $ evalString defaultEnv . unpack <$> tagPromptlyDyn
-        (_textInput_value input)
-        (clicked <> entered)
+    let submitted = evalString defaultEnv . unpack <$> tagPromptlyDyn
+            (_textInput_value input)
+            (clicked <> entered)
+    return submitted
   where
     isEnter code = keyCodeLookup (fromIntegral code) == Enter
