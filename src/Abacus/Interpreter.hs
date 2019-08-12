@@ -3,6 +3,7 @@
 module Abacus.Interpreter
     ( Environment
     , InterpretError(..)
+    , InterpretResult
     , defaultEnv
     , evalString
     , evalStatement
@@ -37,6 +38,9 @@ instance Show InterpretError where
     show (EvalError message) = "Evaluation Error: " ++ message
     show (ParseError message) =
         "Parse Error " ++ map (\c -> if c == '\n' then ' ' else c) message
+
+-- An interpreter result.
+type InterpretResult = Either InterpretError (Environment, Maybe Double)
 
 -- The default environment.
 defaultEnv :: Environment
@@ -103,12 +107,8 @@ evalExpression env = \case
                 Left $
                 EvalError ("wrong number of arguments for function " ++ name)
 
--- Evaluates a statement with the given environment. Returns the result, if any,
--- and the new environment.
-evalStatement ::
-       Environment
-    -> Statement
-    -> Either InterpretError (Environment, Maybe Double)
+-- Evaluates a statement with the given environment.
+evalStatement :: Environment -> Statement -> InterpretResult
 evalStatement env (Expression e) = do
     result <- evalExpression env e
     Right (Environment $ ("ans", constant result) : list env, Just result)
@@ -122,12 +122,8 @@ evalStatement env (Binding name params e)
     | otherwise =
         Right (Environment $ (name, Closure env params e) : list env, Nothing)
 
--- Evaluates a string with the given environment. Returns the result, if any,
--- and the new environment.
-evalString ::
-       Environment
-    -> String
-    -> Either InterpretError (Environment, Maybe Double)
+-- Evaluates a string with the given environment.
+evalString :: Environment -> String -> InterpretResult
 evalString env str = do
     statement <- mapLeft (ParseError . show) $ parse str
     evalStatement env statement
