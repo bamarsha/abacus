@@ -1,38 +1,43 @@
 module Abacus.UI.Web.History
     ( History
-    , empty
+    , singleton
     , now
     , back
     , forward
-    , record
+    , append
+    , amend
     )
 where
 
--- Holds a sequence of events and the current point in time (which partitions
--- the events into before and after).
-data History a = History [a] [a]
+-- Holds a non-empty sequence of events partitioned into past, present, and
+-- future.
+data History a = History [a] a [a]
 
--- The empty history.
-empty :: History a
-empty = History [] []
+-- Starts a new history.
+singleton :: a -> History a
+singleton x = History [] x []
 
--- Returns Just the event immediately following the current point in time, or
--- Nothing if there are no events after.
-now :: History a -> Maybe a
-now (History _ []) = Nothing
-now (History _ (x : _)) = Just x
+-- Returns the present event.
+now :: History a -> a
+now (History _ x _) = x
 
--- Moves the current point in time back one event.
+-- Moves back one event, or does nothing if the history is already at the
+-- beginning.
 back :: History a -> History a
-back (History [] after) = History [] after
-back (History (x : before) after) = History before (x : after)
+back (History [] x future) = History [] x future
+back (History (x : past) y future) = History past x (y : future)
 
--- Moves the current point in time forward one event.
+-- Moves forward one event, or does nothing if the history is already at the
+-- end.
 forward :: History a -> History a
-forward (History before (x : after)) = History (x : before) after
-forward (History before []) = History before []
+forward (History past x []) = History past x []
+forward (History past x (y : future)) = History (x : past) y future
 
--- Records a new event after the most recent in the history and moves the
--- current point in time to just after the new event.
-record :: a -> History a -> History a
-record x (History before after) = History (x : after ++ before) []
+-- Appends the event to the end of the history and moves time forward to the
+-- end.
+append :: a -> History a -> History a
+append x (History past y future) = History (future ++ y : past) x []
+
+-- Amends the present event.
+amend :: a -> History a -> History a
+amend x (History past _ future) = History past x future

@@ -6,11 +6,10 @@ module Abacus.UI.Web
 where
 
 import Abacus.Interpreter
-import Abacus.UI.Web.History
 import Abacus.Utils
-import Data.Maybe
-import Data.Text hiding (empty)
+import Data.Text
 import Reflex.Dom
+import qualified Abacus.UI.Web.History as History
 
 main :: IO ()
 main = mainWidget $ el "div" $ do
@@ -23,14 +22,17 @@ main = mainWidget $ el "div" $ do
 inputBox :: MonadWidget t m => m (Event t InterpretResult)
 inputBox = el "div" $ mdo
     input <- textInput $ def
-        & textInputConfig_setValue .~ (fromMaybe "" . now <$> historyChanged)
+        & textInputConfig_setValue .~ difference
+            (History.now <$> historyChanged)
+            (_textInput_input input)
     clicked <- button "="
     let submitted = evalString defaultEnv . unpack <$> tagPromptlyDyn
             (_textInput_value input)
             (clicked <> keypress Enter input)
-    historyChanged <- accum (&) empty $ leftmost
-        [ record <$> current (_textInput_value input) <@ filterRight submitted
-        , const back <$> keydown ArrowUp input
-        , const forward <$> keydown ArrowDown input
+    historyChanged <- accum (&) (History.singleton "") $ leftmost
+        [ History.append "" <$ filterRight submitted
+        , History.amend <$> _textInput_input input
+        , History.back <$ keydown ArrowUp input
+        , History.forward <$ keydown ArrowDown input
         ]
     return submitted
