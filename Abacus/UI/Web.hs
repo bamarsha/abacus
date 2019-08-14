@@ -1,7 +1,9 @@
-{-# LANGUAGE MonoLocalBinds, OverloadedStrings, RecursiveDo #-}
+{-# LANGUAGE MonoLocalBinds #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecursiveDo #-}
 
 module Abacus.UI.Web
-    ( main
+    ( abacus
     )
 where
 
@@ -11,8 +13,8 @@ import Data.Text
 import Reflex.Dom
 import qualified Abacus.UI.Web.History as History
 
-main :: IO ()
-main = mainWidget $ el "div" $ do
+abacus :: MonadWidget t m => m ()
+abacus = el "div" $ do
     submitted <- inputBox
     let newValue = pack . maybe "" showFloat . snd <$> filterRight submitted
     let newError = pack . either show (const "") <$> submitted
