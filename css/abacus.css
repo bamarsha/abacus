@@ -1,3 +1,13 @@
+/* Color Palette
+ * http://paletton.com/#uid=15o0u0kwi++bu++hX++++rd++kX
+ *
+ * #FFA4C1
+ * #FF709E
+ * #FF0052
+ * #C1003E
+ * #94002F
+ */
+
 html {
     /* I'm not sure why I need this in Electron. :/ */
     overflow: hidden;
