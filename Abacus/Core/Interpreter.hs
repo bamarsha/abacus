@@ -1,19 +1,19 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Abacus.Interpreter
+module Abacus.Core.Interpreter
     ( Environment
     , InterpretError(..)
     , InterpretResult
     , defaultEnv
     , evalString
     , evalStatement
-    ) where
+    )
+where
 
-import Abacus.AST (Expression(Call, Number), Statement(Binding, Expression))
-import Abacus.Parser (parse)
-
-import Data.Either.Combinators (mapLeft)
-import Data.Maybe (isJust)
+import Abacus.Core.AST
+import Abacus.Core.Parser
+import Data.Either.Combinators
+import Data.Maybe
 
 -- Maps names to functions that can be called by other expressions.
 newtype Environment = Environment { list :: [(String, Function)] }

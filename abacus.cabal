@@ -10,14 +10,14 @@ category: Math
 executable abacus
   main-is: Main.hs
   other-modules:
-    Abacus.AST,
-    Abacus.Interpreter,
-    Abacus.Parser,
-    Abacus.Tokenizer,
-    Abacus.UI.Web,
-    Abacus.UI.Web.History,
-    Abacus.UI.Web.TeX,
-    Abacus.Utils
+    Abacus.Core.AST,
+    Abacus.Core.Interpreter,
+    Abacus.Core.Parser,
+    Abacus.Core.Tokenizer,
+    Abacus.Core.Utils,
+    Abacus.UI.History,
+    Abacus.UI.TeX,
+    Abacus.UI.Widgets
   build-depends:
     base ^>=4.11.1.0,
     either ^>=5.0.1,

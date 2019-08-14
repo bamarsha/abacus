@@ -1,37 +1,29 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Abacus.Parser
-    ( Abacus.Parser.parse
-    ) where
-
-import Abacus.AST (Expression(Call, Number), Statement(Binding, Expression))
-import Abacus.Tokenizer (Token(Identifier, NumberT, Operator, Symbol), tokenize)
-import Abacus.Utils (intersperseWhen)
-
-import Data.Functor.Identity (Identity)
-
-import Text.Parsec.Combinator (between, eof, option)
-import Text.Parsec.Error (ParseError)
-import Text.Parsec.Expr
-    ( Assoc(AssocLeft, AssocRight)
-    , Operator(Infix, Prefix)
-    , OperatorTable
-    , buildExpressionParser
+module Abacus.Core.Parser
+    ( Abacus.Core.Parser.parse
     )
-import Text.Parsec.Prim (Parsec, ParsecT, (<|>), parse, tokenPrim, try)
+where
+
+import Abacus.Core.AST
+import Abacus.Core.Tokenizer
+import Abacus.Core.Utils
+import Data.Functor.Identity
+import Text.Parsec.Combinator
+import Text.Parsec.Error
+import Text.Parsec.Expr
+import Text.Parsec.Prim hiding (token, tokens)
 
 -- The table of math operators.
 table :: OperatorTable [Token] () Identity Expression
 table =
     [ [ -- Special case for negative numbers in the exponent.
-        let negativeExponent =
-                try $
-                operator "^" >> operator "-" >>
-                return (\b -> call2 "^" b . call1 "neg")
-         in Infix negativeExponent AssocRight
+        let negativeExponent = try $ operator "^" >> operator "-" >> return
+                (\b -> call2 "^" b . call1 "neg")
+        in  Infix negativeExponent AssocRight
       , Infix (operator "^" >> return (call2 "^")) AssocRight
       ]
-    , [Prefix (operator "-" >> return (call1 "neg"))]
+    , [ Prefix (operator "-" >> return (call1 "neg")) ]
     , [ Infix (operator "*" >> return (call2 "*")) AssocLeft
       , Infix (operator "/" >> return (call2 "/")) AssocLeft
       ]

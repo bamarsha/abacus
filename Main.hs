@@ -3,7 +3,7 @@ module Main
     )
 where
 
-import Abacus.UI.Web
+import Abacus.UI.Widgets
 import Reflex.Dom
 
 main :: IO ()

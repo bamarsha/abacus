@@ -2,16 +2,16 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecursiveDo #-}
 
-module Abacus.UI.Web
+module Abacus.UI.Widgets
     ( abacus
     )
 where
 
-import Abacus.Interpreter
-import Abacus.Utils
+import Abacus.Core.Interpreter
+import Abacus.Core.Utils
 import Data.Text
 import Reflex.Dom
-import qualified Abacus.UI.Web.History as History
+import qualified Abacus.UI.History as History
 
 abacus :: MonadWidget t m => m ()
 abacus = el "div" $ do

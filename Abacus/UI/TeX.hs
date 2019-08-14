@@ -1,13 +1,14 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Abacus.UI.Web.TeX
+module Abacus.UI.TeX
     ( fromStatement
-    ) where
+    )
+where
 
-import Abacus.AST (Expression(Call, Number), Statement(Binding, Expression))
-import Abacus.Utils (showFloat)
-import Data.List (intercalate)
-import Text.Printf (printf)
+import Abacus.Core.AST
+import Abacus.Core.Utils
+import Data.List
+import Text.Printf
 
 -- A math operator corresponding to a node in the AST.
 data Operator
@@ -68,25 +69,22 @@ fromExpression parent side = \case
     Call "log10" [x] -> unary Nothing "\\log_{10} \\left( %s \\right)" x
     Call name args ->
         let args' = intercalate "," (map (fromExpression Nothing Nothing) args)
-         in identifier name ++
-            (if null args'
-                 then ""
-                 else parens args')
+        in  identifier name ++ (if null args' then "" else parens args')
     Number value -> showFloat value
   where
     unary op format x = printf format (fromExpression op Nothing x)
     binary op format x y =
         let x' = fromExpression op (Just LeftSide) x
             y' = fromExpression op (Just RightSide) y
-         in contextualParens parent side op (printf format x' y')
+        in  contextualParens parent side op (printf format x' y')
 
 -- Transforms a statement into TeX.
 fromStatement :: Statement -> String
 fromStatement (Expression e) = fromExpression Nothing Nothing e
 fromStatement (Binding name params e) =
-    fromExpression Nothing Nothing (Call name $ map (\p -> Call p []) params) ++
-    "=" ++
-    fromExpression Nothing Nothing e
+    fromExpression Nothing Nothing (Call name $ map (\p -> Call p []) params)
+        ++ "="
+        ++ fromExpression Nothing Nothing e
 
 -- Formats an identifier as a TeX string.
 identifier :: String -> String
@@ -101,17 +99,14 @@ parens s = "\\left(" ++ s ++ "\\right)"
 
 -- Wraps a TeX expression with parentheses only if they are necessary from
 -- context.
-contextualParens ::
-       Maybe Operator -> Maybe Side -> Maybe Operator -> String -> String
+contextualParens
+    :: Maybe Operator -> Maybe Side -> Maybe Operator -> String -> String
 contextualParens (Just parent) side (Just child) =
-    if needsParens
-        then parens
-        else id
+    if needsParens then parens else id
   where
-    needsParens :: Bool
-    needsParens =
-        (precedence parent > precedence child ||
-         precedence parent == precedence child &&
-         associativity parent /= side) &&
-        not (parent == child && commutative parent)
+    wrongPrecedence = precedence parent > precedence child
+    wrongAssociativity =
+        precedence parent == precedence child && associativity parent /= side
+    needsParens = (wrongPrecedence || wrongAssociativity)
+        && not (parent == child && commutative parent)
 contextualParens _ _ _ = id

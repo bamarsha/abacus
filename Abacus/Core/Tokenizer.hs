@@ -1,16 +1,16 @@
-module Abacus.Tokenizer
+module Abacus.Core.Tokenizer
     ( Token(..)
     , tokenize
-    ) where
+    )
+where
 
 import Control.Applicative (empty)
-import Data.Functor.Identity (Identity)
-
-import Text.Parsec.Combinator (choice, eof)
-import Text.Parsec.Error (ParseError)
-import Text.Parsec.Language (emptyDef)
-import Text.Parsec.Pos (SourceName)
-import Text.Parsec.Prim (Parsec, (<|>), many, runParser)
+import Data.Functor.Identity
+import Text.Parsec.Combinator
+import Text.Parsec.Error
+import Text.Parsec.Language
+import Text.Parsec.Pos
+import Text.Parsec.Prim hiding (tokens)
 import qualified Text.Parsec.Token as PT
 
 -- A token.
