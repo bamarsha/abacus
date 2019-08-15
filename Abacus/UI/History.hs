@@ -1,7 +1,7 @@
 module Abacus.UI.History
     ( History
     , singleton
-    , now
+    , present
     , back
     , forward
     , append
@@ -11,33 +11,45 @@ where
 
 -- Holds a non-empty sequence of events partitioned into past, present, and
 -- future.
-data History a = History [a] a [a]
+data History a = History
+    { past :: [a]
+    , present :: a
+    , future :: [a]
+    }
 
 -- Starts a new history.
 singleton :: a -> History a
-singleton x = History [] x []
-
--- Returns the present event.
-now :: History a -> a
-now (History _ x _) = x
+singleton x = History { past = [], present = x, future = [] }
 
 -- Moves back one event, or does nothing if the history is already at the
 -- beginning.
 back :: History a -> History a
-back (History [] x future) = History [] x future
-back (History (x : past) y future) = History past x (y : future)
+back h@History { past = [] } = h
+back History { past = p : ps, present = x, future = fs } = History
+    { past = ps
+    , present = p
+    , future = x : fs
+    }
 
 -- Moves forward one event, or does nothing if the history is already at the
 -- end.
 forward :: History a -> History a
-forward (History past x []) = History past x []
-forward (History past x (y : future)) = History (x : past) y future
+forward h@History { future = [] } = h
+forward History { past = ps, present = x, future = f : fs } = History
+    { past = x : ps
+    , present = f
+    , future = fs
+    }
 
 -- Appends the event to the end of the history and moves time forward to the
 -- end.
 append :: a -> History a -> History a
-append x (History past y future) = History (future ++ y : past) x []
+append x h = h
+    { past = future h ++ present h : past h
+    , present = x
+    , future = []
+    }
 
 -- Amends the present event.
 amend :: a -> History a -> History a
-amend x (History past _ future) = History past x future
+amend x h = h { present = x }

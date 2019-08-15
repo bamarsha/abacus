@@ -25,7 +25,7 @@ inputBox :: MonadWidget t m => m (Event t InterpretResult)
 inputBox = el "div" $ mdo
     input <- textInput $ def
         & textInputConfig_setValue .~ difference
-            (History.now <$> historyChanged)
+            (History.present <$> historyChanged)
             (_textInput_input input)
     clicked <- button "="
     let submitted = evalString defaultEnv . unpack <$> tagPromptlyDyn
