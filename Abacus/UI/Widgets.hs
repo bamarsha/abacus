@@ -29,9 +29,8 @@ abacus = el "div" $ mdo
     return ()
 
 errorBox :: MonadWidget t m => Event t SubmitResult -> m ()
-errorBox submitted =
-    let errorResult = pack . either show (const "") <$> submitted
-    in  el "div" $ holdDyn "" errorResult >>= dynText
+errorBox submitted = el "div" $ holdDyn "" errorResult >>= dynText
+    where errorResult = pack . either show (const "") <$> submitted
 
 resultList :: MonadWidget t m => Event t SubmitResult -> m ()
 resultList submitted = el "dl" $ do
