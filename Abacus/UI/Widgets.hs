@@ -23,10 +23,11 @@ abacus = el "div" $ do
 
 inputBox :: MonadWidget t m => m (Event t InterpretResult)
 inputBox = el "div" $ mdo
-    input <- textInput $ def
-        & textInputConfig_setValue .~ difference
+    input <- textInput def
+        { _textInputConfig_setValue = difference
             (History.present <$> historyChanged)
             (_textInput_input input)
+        }
     clicked <- button "="
     let submitted = evalString defaultEnv . unpack <$> tagPromptlyDyn
             (_textInput_value input)
