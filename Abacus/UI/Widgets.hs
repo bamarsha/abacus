@@ -9,17 +9,28 @@ where
 
 import Abacus.Core.Interpreter
 import Abacus.Core.Utils
-import Data.Text
+import Data.Text hiding (reverse)
 import Reflex.Dom
 import qualified Abacus.UI.History as History
 
 abacus :: MonadWidget t m => m ()
-abacus = el "div" $ do
+abacus = el "div" $ mdo
+    errorBox submitted
+    valueList submitted
     submitted <- inputBox
-    let newValue = pack . maybe "" showFloat . snd <$> filterRight submitted
-    let newError = pack . either show (const "") <$> submitted
-    el "div" $ holdDyn "" newValue >>= dynText
-    el "div" $ holdDyn "" newError >>= dynText
+    return ()
+
+errorBox :: MonadWidget t m => Event t InterpretResult -> m ()
+errorBox submitted =
+    let errorResult = pack . either show (const "") <$> submitted
+    in  el "div" $ holdDyn "" errorResult >>= dynText
+
+valueList :: MonadWidget t m => Event t InterpretResult -> m ()
+valueList submitted = el "ul" $ do
+    let valueResult = pack . maybe "" showFloat . snd <$> filterRight submitted
+    values <- foldDyn (:) [] valueResult
+    _ <- simpleList (reverse <$> values) $ el "li" . dynText
+    return ()
 
 inputBox :: MonadWidget t m => m (Event t InterpretResult)
 inputBox = el "div" $ mdo
