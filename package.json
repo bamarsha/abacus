@@ -1,16 +1,6 @@
 {
-  "name": "Abacus",
-  "main": "main.js",
+  "name": "abacus",
   "dependencies": {
-    "freeport": "^1.0.5",
-    "katex": "^0.10.2"
-  },
-  "devDependencies": {
-    "electron": "^4.2.4",
-    "electron-packager": "^13.1.1"
-  },
-  "scripts": {
-    "start": "electron main.js",
-    "package": "electron-packager . --icon abacus --ignore src --ignore dist-newstyle"
+    "katex": "^0.11.0"
   }
 }

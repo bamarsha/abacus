@@ -4,7 +4,7 @@ module Main
 where
 
 import Abacus.UI.Widgets
-import Reflex.Dom
+import Abacus.UI.Window
 
 main :: IO ()
-main = mainWidget abacus
+main = run mainWidget

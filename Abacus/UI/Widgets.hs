@@ -1,27 +1,44 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MonoLocalBinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE TupleSections #-}
 
 module Abacus.UI.Widgets
-    ( abacus
+    ( mainWidget
     )
 where
 
 import Abacus.Core.Interpreter
 import Abacus.Core.Utils
-import Data.Text hiding (reverse)
-import Reflex.Dom hiding (Input)
 import qualified Abacus.UI.History as History
+import Data.Functor
+import Data.Text (Text)
+import qualified Data.Text as Text
+import Language.Javascript.JSaddle.Object
+import Language.Javascript.JSaddle.Types
+import Reflex.Dom hiding (mainWidget, mainWidgetWithHead)
+import Reflex.Dom.Main (mainWidgetWithHead)
 
-newtype Input = Input Text
+newtype SubmitInput = SubmitInput Text
 
-newtype Output = Output (Environment, Maybe Double)
+newtype SubmitOutput = SubmitOutput (Environment, Maybe Double)
 
-type SubmitResult = Either InterpretError (Input, Output)
+type SubmitResult = Either InterpretError (SubmitInput, SubmitOutput)
 
-abacus :: MonadWidget t m => m ()
-abacus = el "div" $ mdo
+mainWidget :: JSM ()
+mainWidget = mainWidgetWithHead headElement bodyElement
+
+headElement :: MonadWidget t m => m ()
+headElement = do
+    elAttr "link" ("rel" =: "stylesheet" <> "href" =: katexCss) blank
+    elAttr "script" ("src" =: katexJs) blank
+  where
+    katexCss = "node_modules/katex/dist/katex.css"
+    katexJs = "node_modules/katex/dist/katex.js"
+
+bodyElement :: MonadWidget t m => m ()
+bodyElement = el "div" $ mdo
     errorBox submitted
     resultList submitted
     submitted <- inputBox
@@ -29,18 +46,26 @@ abacus = el "div" $ mdo
 
 errorBox :: MonadWidget t m => Event t SubmitResult -> m ()
 errorBox submitted = el "div" $ holdDyn "" errorResult >>= dynText
-    where errorResult = pack . either show (const "") <$> submitted
+    where errorResult = Text.pack . either show (const "") <$> submitted
 
 resultList :: MonadWidget t m => Event t SubmitResult -> m ()
 resultList submitted = el "dl" $ do
     results <- foldDyn (:) [] $ filterRight submitted
     _ <- simpleList (reverse <$> results) $ \result -> do
-        el "dt" $ dynText $ input <$> result
-        el "dd" $ dynText $ output <$> result
+        dt <- fst <$> el' "dt" blank
+        dd <- fst <$> el' "dd" blank
+        postBuild <- getPostBuild
+        performEvent
+            $ leftmost [updated result, tag (current result) postBuild]
+            -- TODO: Use the TeX module to convert the input statement to TeX.
+            <&> \r -> katex dt (input r) >> katex dd (output r)
     return ()
   where
-    input (Input i, _) = i
-    output (_, Output (_, o)) = pack $ maybe "" showFloat o
+    input (SubmitInput i, _) = i
+    output (_, SubmitOutput (_, o)) = maybe "" showFloat o
+    katex e t = liftJSM
+        $ jsg ("katex" :: String) # ("render" :: String)
+        $ (t, _element_raw e)
 
 inputBox :: MonadWidget t m => m (Event t SubmitResult)
 inputBox = el "div" $ mdo
@@ -50,7 +75,7 @@ inputBox = el "div" $ mdo
             (_textInput_input input)
         }
     clicked <- button "="
-    let submitted = eval <$> tagPromptlyDyn
+    let submitted = evalInput <$> tagPromptlyDyn
             (_textInput_value input)
             (clicked <> keypress Enter input)
     historyChanged <- accum (&) (History.singleton "") $ leftmost
@@ -61,4 +86,7 @@ inputBox = el "div" $ mdo
         ]
     return submitted
   where
-    eval i = (Input i,) . Output <$> evalString defaultEnv (unpack i)
+    -- TODO: Save the environment returned by evalString.
+    evalInput i = (SubmitInput i, ) . SubmitOutput <$> evalString
+        defaultEnv
+        (Text.unpack i)
