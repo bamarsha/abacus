@@ -10,7 +10,6 @@ where
 
 import Abacus.Core.Interpreter
 import Abacus.Core.Utils
-import Data.Either.Combinators
 import Data.Text hiding (reverse)
 import Reflex.Dom hiding (Input)
 import qualified Abacus.UI.History as History
@@ -62,4 +61,4 @@ inputBox = el "div" $ mdo
         ]
     return submitted
   where
-    eval i = mapRight ((Input i,) . Output) $ evalString defaultEnv $ unpack i
+    eval i = (Input i,) . Output <$> evalString defaultEnv (unpack i)
