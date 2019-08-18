@@ -12,7 +12,7 @@ where
 import Abacus.Core.Interpreter
 import Abacus.Core.Utils
 import qualified Abacus.UI.History as History
-import Data.Functor
+import qualified Data.Map as Map
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Language.Javascript.JSaddle.Object
@@ -50,17 +50,20 @@ errorBox submitted = el "div" $ holdDyn "" errorResult >>= dynText
 
 resultList :: MonadWidget t m => Event t SubmitResult -> m ()
 resultList submitted = el "dl" $ do
-    results <- foldDyn (:) [] $ filterRight submitted
-    _ <- simpleList (reverse <$> results) $ \result -> do
+    resultsWithKey <- getResultsWithKey
+    _ <- listHoldWithKey Map.empty resultsWithKey $ \_ result -> do
         dt <- fst <$> el' "dt" blank
         dd <- fst <$> el' "dd" blank
-        postBuild <- getPostBuild
-        performEvent
-            $ leftmost [updated result, tag (current result) postBuild]
-            -- TODO: Use the TeX module to convert the input statement to TeX.
-            <&> \r -> katex dt (input r) >> katex dd (output r)
+        -- TODO: Use the TeX module to convert the input statement to TeX.
+        _ <- katex dt $ input result
+        _ <- katex dd $ output result
+        return ()
     return ()
   where
+    getResultsWithKey = mapAccum_
+        (\n r -> (succ n, Map.singleton n $ Just r))
+        (0 :: Integer)
+        (filterRight submitted)
     input (SubmitInput i, _) = i
     output (_, SubmitOutput (_, o)) = maybe "" showFloat o
     katex e t = liftJSM $ do
