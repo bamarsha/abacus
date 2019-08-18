@@ -4,7 +4,8 @@ module Abacus.UI.History
     , present
     , back
     , forward
-    , append
+    , end
+    , insert
     , amend
     )
 where
@@ -41,13 +42,22 @@ forward History { past = ps, present = x, future = f : fs } = History
     , future = fs
     }
 
--- Appends the event to the end of the history and moves time forward to the
--- end.
-append :: a -> History a -> History a
-append x h = h
-    { past = future h ++ present h : past h
-    , present = x
+-- Moves to the end of the history.
+end :: History a -> History a
+end h@History { future = [] } = h
+end h = History
+    { past = reverse (init $ future h) ++ present h : past h
+    , present = last $ future h
     , future = []
+    }
+
+-- Inserts an event after the present event, and moves history forward to the
+-- new event.
+insert :: a -> History a -> History a
+insert x h = History
+    { past = present h : past h
+    , present = x
+    , future = future h
     }
 
 -- Amends the present event.

@@ -84,7 +84,8 @@ inputBox = el "div" $ mdo
             (_textInput_value input)
             (clicked <> keypress Enter input)
     historyChanged <- accum (&) (History.singleton "") $ leftmost
-        [ History.append "" <$ filterRight submitted
+        [ submitHistory
+            <$> tagPromptlyDyn (_textInput_value input) (filterRight submitted)
         , History.amend <$> _textInput_input input
         , History.back <$ keydown ArrowUp input
         , History.forward <$ keydown ArrowDown input
@@ -95,3 +96,9 @@ inputBox = el "div" $ mdo
     evalInput i = (SubmitInput i, ) . SubmitOutput <$> evalString
         defaultEnv
         (Text.unpack i)
+    submitHistory i h
+        | Text.null $ History.present h' =
+            History.insert "" $ History.amend i h'
+        | i == History.present h' = History.insert "" h'
+        | otherwise               = History.insert "" $ History.insert i h'
+        where h' = History.end h
