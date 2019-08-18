@@ -97,8 +97,9 @@ inputBox = el "div" $ mdo
         defaultEnv
         (Text.unpack i)
     submitHistory i h
-        | Text.null $ History.present h' =
-            History.insert "" $ History.amend i h'
-        | i == History.present h' = History.insert "" h'
-        | otherwise               = History.insert "" $ History.insert i h'
-        where h' = History.end h
+        | Text.null latest = History.amend i h' & History.insert ""
+        | i == latest      = History.insert "" h'
+        | otherwise        = History.insert i h' & History.insert ""
+      where
+        h' = History.end h
+        latest = History.present h'
