@@ -63,9 +63,11 @@ resultList submitted = el "dl" $ do
   where
     input (SubmitInput i, _) = i
     output (_, SubmitOutput (_, o)) = maybe "" showFloat o
-    katex e t = liftJSM
-        $ jsg ("katex" :: String) # ("render" :: String)
-        $ (t, _element_raw e)
+    katex e t = liftJSM $ do
+        options <- obj
+        options <# ("throwOnError" :: String) $ False
+        jsg ("katex" :: String) # ("render" :: String)
+            $ (t, _element_raw e, options)
 
 inputBox :: MonadWidget t m => m (Event t SubmitResult)
 inputBox = el "div" $ mdo
