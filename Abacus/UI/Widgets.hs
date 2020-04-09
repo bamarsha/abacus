@@ -33,7 +33,7 @@ type SubmitResult = Either InterpretError (SubmitInput, SubmitOutput)
 mainWidget :: JSM ()
 mainWidget = do
     _ <- eval $ decodeUtf8 $(embedFile "node_modules/katex/dist/katex.min.js")
-    mainWidgetWithCss "@import url(\"node_modules/katex/dist/katex.css\");" bodyElement
+    mainWidgetWithCss "@import url(\"katex/katex.css\");" bodyElement
 
 bodyElement :: MonadWidget t m => m ()
 bodyElement = el "div" $ mdo
