@@ -1,17 +1,15 @@
 module Abacus.Core.Utils
-    ( showFloat
+    ( showWithoutTrailingZero
     , intersperseWhen
     , replaceSublist
     )
 where
 
-import Data.Text.Format (shortest)
-import Data.Text.Lazy (unpack)
-import Data.Text.Lazy.Builder (toLazyText)
-
--- Shows a float without trailing zeroes.
-showFloat :: Double -> String
-showFloat = unpack . toLazyText . shortest
+-- Shows a decimal number without the trailing zero for whole numbers.
+showWithoutTrailingZero :: Show a => a -> String
+showWithoutTrailingZero num =
+    let (integer, fraction) = break (== '.') $ show num
+    in  if fraction == ".0" then integer else integer ++ fraction
 
 -- intersperseWhen f sep xs inserts sep between each pair of elements in xs only
 -- when f returns True for that pair.

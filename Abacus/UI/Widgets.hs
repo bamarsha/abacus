@@ -65,7 +65,7 @@ resultList submitted = el "dl" $ do
         (0 :: Integer)
         (filterRight submitted)
     input (SubmitInput i, _) = i
-    output (_, SubmitOutput (_, o)) = maybe "" showFloat o
+    output (_, SubmitOutput (_, o)) = maybe "" showWithoutTrailingZero o
     katex e t = liftJSM $ do
         options <- obj
         options <# ("throwOnError" :: String) $ False

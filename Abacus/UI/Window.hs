@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -6,13 +7,21 @@ module Abacus.UI.Window
     )
 where
 
+import Language.Javascript.JSaddle.Types
+
+#ifdef __GHCJS__
+
+run :: JSM () -> IO ()
+run = id
+
+#else
+
 import Control.Concurrent
 import qualified Data.Text as Text
 import GI.GLib
 import GI.Gtk hiding (init, main)
 import qualified GI.Gtk as Gtk (init, main)
 import GI.WebKit2
-import Language.Javascript.JSaddle.Types
 import Language.Javascript.JSaddle.WebKitGTK hiding (run)
 import System.Directory
 
@@ -57,3 +66,5 @@ loadMainWidget webView mainWidget finished = do
     getIndexUrl = do
         dir <- getCurrentDirectory
         return $ "file://" <> Text.pack dir <> "/index.html"
+
+#endif

@@ -70,7 +70,7 @@ fromExpression parent side = \case
     Call name args ->
         let args' = intercalate "," (map (fromExpression Nothing Nothing) args)
         in  identifier name ++ (if null args' then "" else parens args')
-    Number value -> showFloat value
+    Number value -> showWithoutTrailingZero value
   where
     unary op format x = printf format (fromExpression op Nothing x)
     binary op format x y =
