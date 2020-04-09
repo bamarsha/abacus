@@ -17,6 +17,6 @@ postBuildHook :: a -> b -> c -> LocalBuildInfo -> IO ()
 postBuildHook _ _ _ info = do
     let packageDir = takeDirectory $ fromJust $ pkgDescrFile info
     let jsexe = buildDir info </> "abacus" </> "abacus.jsexe"
-    copyDirectoryRecursive normal
+    copyDirectoryRecursive verbose
         (packageDir </> "node_modules" </> "katex" </> "dist")
         (jsexe </> "katex")
