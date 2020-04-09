@@ -2,6 +2,7 @@
 {-# LANGUAGE MonoLocalBinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecursiveDo #-}
+{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TupleSections #-}
 
 module Abacus.UI.Widgets
@@ -12,9 +13,12 @@ where
 import Abacus.Core.Interpreter
 import Abacus.Core.Utils
 import qualified Abacus.UI.History as History
+import Data.FileEmbed
 import qualified Data.Map as Map
 import Data.Text (Text)
 import qualified Data.Text as Text
+import Data.Text.Encoding
+import Language.Javascript.JSaddle.Evaluate
 import Language.Javascript.JSaddle.Object
 import Language.Javascript.JSaddle.Types
 import Reflex.Dom hiding (mainWidget, mainWidgetWithHead)
@@ -27,15 +31,9 @@ newtype SubmitOutput = SubmitOutput (Environment, Maybe Double)
 type SubmitResult = Either InterpretError (SubmitInput, SubmitOutput)
 
 mainWidget :: JSM ()
-mainWidget = mainWidgetWithHead headElement bodyElement
-
-headElement :: MonadWidget t m => m ()
-headElement = do
-    elAttr "link" ("rel" =: "stylesheet" <> "href" =: katexCss) blank
-    elAttr "script" ("src" =: katexJs) blank
-  where
-    katexCss = "node_modules/katex/dist/katex.css"
-    katexJs = "node_modules/katex/dist/katex.js"
+mainWidget = do
+    _ <- eval $ decodeUtf8 $(embedFile "node_modules/katex/dist/katex.min.js")
+    mainWidgetWithCss "@import url(\"node_modules/katex/dist/katex.css\");" bodyElement
 
 bodyElement :: MonadWidget t m => m ()
 bodyElement = el "div" $ mdo
