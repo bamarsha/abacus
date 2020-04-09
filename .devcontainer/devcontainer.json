@@ -1,0 +1,7 @@
+{
+  "image": "clovyr/haskell-base-8.6.5",
+  "postCreateCommand": "cabal v2-update",
+  "extensions": [
+    "justusadam.language-haskell"
+  ]
+}
