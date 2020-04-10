@@ -15,6 +15,7 @@ import Abacus.Core.Parser
 import Abacus.Core.Utils
 import qualified Abacus.UI.History as History
 import qualified Abacus.UI.TeX as TeX
+import Control.Monad
 import Data.Either.Unwrap
 import Data.FileEmbed
 import qualified Data.Map as Map
@@ -35,9 +36,10 @@ newtype SubmitOutput = SubmitOutput (Environment, Maybe Double)
 type SubmitResult = Either InterpretError (SubmitInput, SubmitOutput)
 
 mainWidget :: JSM ()
-mainWidget = do
+mainWidget = void $ do
     _ <- eval $ decodeUtf8 $(embedFile "node_modules/katex/dist/katex.min.js")
     mainWidgetWithHead headElement bodyElement
+    eval ("document.querySelector(\".input input\").focus();" :: String)
 
 headElement :: MonadWidget t m => m ()
 headElement = do
@@ -84,19 +86,18 @@ resultList submitted = elClass "div" "results" $ el "dl" $ do
 
 inputBox :: MonadWidget t m => m (Event t SubmitResult)
 inputBox = elClass "div" "input" $ mdo
-    input <- textInput def
-        { _textInputConfig_setValue = difference
+    input <- inputElement $ def
+        & inputElementConfig_setValue .~ difference
             (History.present <$> historyChanged)
-            (_textInput_input input)
-        }
+            (_inputElement_input input)
     clicked <- button "="
     submitted <- mapAccum_ evalInput defaultEnv $ tagPromptlyDyn
-            (_textInput_value input)
+            (value input)
             (clicked <> keypress Enter input)
     historyChanged <- accum (&) (History.singleton "") $ leftmost
         [ submitHistory
-            <$> tagPromptlyDyn (_textInput_value input) (filterRight submitted)
-        , History.amend <$> _textInput_input input
+            <$> tagPromptlyDyn (value input) (filterRight submitted)
+        , History.amend <$> _inputElement_input input
         , History.back <$ keydown ArrowUp input
         , History.forward <$ keydown ArrowDown input
         ]
