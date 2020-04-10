@@ -1,0 +1,86 @@
+/* Color Palette (http://paletton.com/#uid=15o0u0kwi++bu++hX++++rd++kX)
+ * - #FFA4C1
+ * - #FF709E
+ * - #FF0052
+ * - #C1003E
+ * - #94002F
+ */
+
+@import url("katex/katex.min.css");
+
+body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    margin: 0;
+}
+
+.results {
+    display: flex;
+    flex-grow: 1;
+    overflow: auto;
+    padding: 5px 0;
+}
+.results dl {
+    flex-grow: 1;
+    margin: auto 0 0 0;
+    width: 100%;
+}
+.results dt, .results dd {
+    padding: 0 10px;
+}
+.results .katex-display {
+    margin: 0.5em 0;
+}
+.results dt {
+    opacity: 0.8;
+    overflow: auto hidden;
+    transition: opacity 0.2s;
+}
+.results dt .katex {
+    font-size: 13pt !important;
+}
+.results dt .katex-display > .katex {
+    text-align: left;
+}
+.results dt:hover {
+    opacity: 1;
+}
+.results dd {
+    margin-left: 0;
+}
+.results dd .katex {
+    font-size: 16pt !important;
+}
+.results dd .katex-display > .katex {
+    text-align: right;
+}
+
+.input {
+    border-top: 3px solid #ff0052;
+    display: flex;
+}
+.input input, .input button {
+    font-family: "KaTeX_Main";
+}
+.input input {
+    background: #fafafa;
+    border: none;
+    flex-grow: 1;
+    font-size: 13pt;
+    outline: none;
+    padding: 10px;
+}
+.input button {
+    background: #eee;
+    border-bottom: none;
+    border-left: 3px #ccc solid;
+    border-right: none;
+    border-top: none;
+    font-size: 20pt;
+    font-weight: bold;
+    width: 75px;
+}
+.input button:hover {
+    background: #ddd;
+}

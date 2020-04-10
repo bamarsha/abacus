@@ -1,10 +1,11 @@
+cabal-version: >= 2.0
+
 name: abacus
 version: 0.1.0.0
 author: Sarah Marshall
 maintainer: sarah@sarahmarshall.name
 category: Math
 build-type: Custom
-cabal-version: >= 2.0
 
 custom-setup
   setup-depends:

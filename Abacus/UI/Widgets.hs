@@ -33,10 +33,10 @@ type SubmitResult = Either InterpretError (SubmitInput, SubmitOutput)
 mainWidget :: JSM ()
 mainWidget = do
     _ <- eval $ decodeUtf8 $(embedFile "node_modules/katex/dist/katex.min.js")
-    mainWidgetWithCss "@import url(\"katex/katex.min.css\");" bodyElement
+    mainWidgetWithCss $(embedFile "abacus.css") bodyElement
 
 bodyElement :: MonadWidget t m => m ()
-bodyElement = el "div" $ mdo
+bodyElement = mdo
     errorBox submitted
     resultList submitted
     submitted <- inputBox
@@ -47,7 +47,7 @@ errorBox submitted = el "div" $ holdDyn "" errorResult >>= dynText
     where errorResult = Text.pack . either show (const "") <$> submitted
 
 resultList :: MonadWidget t m => Event t SubmitResult -> m ()
-resultList submitted = el "dl" $ do
+resultList submitted = elClass "div" "results" $ el "dl" $ do
     resultsWithKey <- getResultsWithKey
     _ <- listHoldWithKey Map.empty resultsWithKey $ \_ result -> do
         dt <- fst <$> el' "dt" blank
@@ -67,11 +67,12 @@ resultList submitted = el "dl" $ do
     katex e t = liftJSM $ do
         options <- obj
         options <# ("throwOnError" :: String) $ False
+        options <# ("displayMode" :: String) $ True
         jsg ("katex" :: String) # ("render" :: String)
             $ (t, _element_raw e, options)
 
 inputBox :: MonadWidget t m => m (Event t SubmitResult)
-inputBox = el "div" $ mdo
+inputBox = elClass "div" "input" $ mdo
     input <- textInput def
         { _textInputConfig_setValue = difference
             (History.present <$> historyChanged)
