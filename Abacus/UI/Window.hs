@@ -61,10 +61,10 @@ loadMainWidget webView mainWidget finished = do
         _ -> return ()
     indexUrl <- getIndexUrl
     webViewLoadHtml webView indexHtml $ Just indexUrl
-  where
-    indexHtml = "<!DOCTYPE html><html><head></head><body></body></html>"
-    getIndexUrl = do
-        dir <- getCurrentDirectory
-        return $ "file://" <> Text.pack dir <> "/index.html"
+    where
+        indexHtml = "<!DOCTYPE html><html><head></head><body></body></html>"
+        getIndexUrl = do
+            dir <- getCurrentDirectory
+            return $ "file://" <> Text.pack dir <> "/index.html"
 
 #endif

@@ -59,10 +59,10 @@ identifier = Identifier <$> PT.identifier tokenParser
 -- naturals are converted to floats.
 number :: Parsec String () Token
 number = alwaysFloat <$> PT.naturalOrFloat tokenParser
-  where
-    alwaysFloat :: Either Integer Double -> Token
-    alwaysFloat (Left n) = NumberT (fromIntegral n)
-    alwaysFloat (Right f) = NumberT f
+    where
+        alwaysFloat :: Either Integer Double -> Token
+        alwaysFloat (Left n) = NumberT (fromIntegral n)
+        alwaysFloat (Right f) = NumberT f
 
 -- The parser for taking a complete string of math and returning a list of
 -- tokens.

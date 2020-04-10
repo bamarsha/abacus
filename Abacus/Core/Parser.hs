@@ -131,16 +131,16 @@ parse string =
 -- multiplication by inserting multiplication operators.
 withExplicitMult :: [Token] -> [Token]
 withExplicitMult = intersperseWhen isImplicitMult $ Operator "*"
-  where
-    isImplicitMult :: (Token, Token) -> Bool
-    isImplicitMult = \case
-        (Identifier _, Identifier _) -> True
-        (NumberT _, Identifier _) -> True
-        (NumberT _, Symbol "(") -> True
-        (Symbol ")", Identifier _) -> True
-        (Symbol ")", NumberT _) -> True
-        (Symbol ")", Symbol "(") -> True
-        -- The parser can't tell if this is multiplication or a function call
-        -- since it depends on the environment.
-        (Identifier _, Symbol "(") -> False
-        _ -> False
+    where
+        isImplicitMult :: (Token, Token) -> Bool
+        isImplicitMult = \case
+            (Identifier _, Identifier _) -> True
+            (NumberT _, Identifier _) -> True
+            (NumberT _, Symbol "(") -> True
+            (Symbol ")", Identifier _) -> True
+            (Symbol ")", NumberT _) -> True
+            (Symbol ")", Symbol "(") -> True
+            -- The parser can't tell if this is multiplication or a function
+            -- call since it depends on the environment.
+            (Identifier _, Symbol "(") -> False
+            _ -> False

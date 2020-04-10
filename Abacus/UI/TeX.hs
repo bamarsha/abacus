@@ -71,12 +71,12 @@ fromExpression parent side = \case
         let args' = intercalate "," (map (fromExpression Nothing Nothing) args)
         in  identifier name ++ (if null args' then "" else parens args')
     Number value -> showWithoutTrailingZero value
-  where
-    unary op format x = printf format (fromExpression op Nothing x)
-    binary op format x y =
-        let x' = fromExpression op (Just LeftSide) x
-            y' = fromExpression op (Just RightSide) y
-        in  contextualParens parent side op (printf format x' y')
+    where
+        unary op format x = printf format (fromExpression op Nothing x)
+        binary op format x y =
+            let x' = fromExpression op (Just LeftSide) x
+                y' = fromExpression op (Just RightSide) y
+            in  contextualParens parent side op (printf format x' y')
 
 -- Transforms a statement into TeX.
 fromStatement :: Statement -> String
@@ -103,10 +103,10 @@ contextualParens
     :: Maybe Operator -> Maybe Side -> Maybe Operator -> String -> String
 contextualParens (Just parent) side (Just child) =
     if needsParens then parens else id
-  where
-    wrongPrecedence = precedence parent > precedence child
-    wrongAssociativity =
-        precedence parent == precedence child && associativity parent /= side
-    needsParens = (wrongPrecedence || wrongAssociativity)
-        && not (parent == child && commutative parent)
+    where
+        wrongPrecedence = precedence parent > precedence child
+        wrongAssociativity = precedence parent == precedence child
+                             && associativity parent /= side
+        needsParens = (wrongPrecedence || wrongAssociativity)
+                      && not (parent == child && commutative parent)
 contextualParens _ _ _ = id

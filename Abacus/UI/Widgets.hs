@@ -62,19 +62,19 @@ resultList submitted = elClass "div" "results" $ el "dl" $ do
         _ <- katex dd $ output result
         return ()
     return ()
-  where
-    getResultsWithKey = mapAccum_
-        (\n r -> (succ n, Map.singleton n $ Just r))
-        (0 :: Integer)
-        (filterRight submitted)
-    input (SubmitInput i, _) = i <> " ="
-    output (_, SubmitOutput (_, o)) = maybe "" showWithoutTrailingZero o
-    katex e t = liftJSM $ do
-        options <- obj
-        options <# ("throwOnError" :: String) $ False
-        options <# ("displayMode" :: String) $ True
-        jsg ("katex" :: String) # ("render" :: String)
-            $ (t, _element_raw e, options)
+    where
+        getResultsWithKey = mapAccum_
+            (\n r -> (succ n, Map.singleton n $ Just r))
+            (0 :: Integer)
+            (filterRight submitted)
+        input (SubmitInput i, _) = i <> " ="
+        output (_, SubmitOutput (_, o)) = maybe "" showWithoutTrailingZero o
+        katex e t = liftJSM $ do
+            options <- obj
+            options <# ("throwOnError" :: String) $ False
+            options <# ("displayMode" :: String) $ True
+            jsg ("katex" :: String) # ("render" :: String)
+                $ (t, _element_raw e, options)
 
 inputBox :: MonadWidget t m => m (Event t SubmitResult)
 inputBox = elClass "div" "input" $ mdo
@@ -95,15 +95,14 @@ inputBox = elClass "div" "input" $ mdo
         , History.forward <$ keydown ArrowDown input
         ]
     return submitted
-  where
-    -- TODO: Save the environment returned by evalString.
-    evalInput i = (SubmitInput i, ) . SubmitOutput <$> evalString
-        defaultEnv
-        (Text.unpack i)
-    submitHistory i h
-        | Text.null latest = History.amend i h' & History.insert ""
-        | i == latest      = History.insert "" h'
-        | otherwise        = History.insert i h' & History.insert ""
-      where
-        h' = History.end h
-        latest = History.present h'
+    where
+        -- TODO: Save the environment returned by evalString.
+        evalInput i = (SubmitInput i, ) . SubmitOutput <$> evalString
+            defaultEnv
+            (Text.unpack i)
+        submitHistory i h
+            | Text.null latest = History.amend i h' & History.insert ""
+            | i == latest      = History.insert "" h'
+            | otherwise        = History.insert i h' & History.insert ""
+            where h' = History.end h
+                  latest = History.present h'
