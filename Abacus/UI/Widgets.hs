@@ -18,6 +18,7 @@ import qualified Abacus.UI.TeX as TeX
 import Data.Either.Unwrap
 import Data.FileEmbed
 import qualified Data.Map as Map
+import Data.Maybe
 import Data.Text (Text)
 import qualified Data.Text as Text
 import Data.Text.Encoding
@@ -69,9 +70,11 @@ resultList submitted = elClass "div" "results" $ el "dl" $ do
             (\n r -> (succ n, Map.singleton n $ Just r))
             (0 :: Integer)
             (filterRight submitted)
-        input (SubmitInput i, _) =
-            (TeX.fromStatement $ fromRight $ parse $ Text.unpack i) ++ " ="
-        output (_, SubmitOutput (_, o)) = maybe "" showWithoutTrailingZero o
+        input (SubmitInput text, SubmitOutput (_, value)) =
+            (TeX.fromStatement $ fromRight $ parse $ Text.unpack text)
+                ++ if isJust value then " =" else ""
+        output (_, SubmitOutput (_, value)) =
+            maybe "" showWithoutTrailingZero value
         katex e t = liftJSM $ do
             options <- obj
             options <# ("throwOnError" :: String) $ False

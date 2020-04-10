@@ -81,10 +81,12 @@ fromExpression parent side = \case
 -- Transforms a statement into TeX.
 fromStatement :: Statement -> String
 fromStatement (Expression e) = fromExpression Nothing Nothing e
+fromStatement (Binding name [] e) =
+    fromExpression Nothing Nothing (Call name [])
+        ++ "\\leftarrow " ++ fromExpression Nothing Nothing e
 fromStatement (Binding name params e) =
     fromExpression Nothing Nothing (Call name $ map (\p -> Call p []) params)
-        ++ "="
-        ++ fromExpression Nothing Nothing e
+        ++ "=" ++ fromExpression Nothing Nothing e
 
 -- Formats an identifier as a TeX string.
 identifier :: String -> String
