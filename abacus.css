@@ -8,11 +8,19 @@
 
 @import url("katex/katex.min.css");
 
+html {
+    background: #eee;
+}
+
 body {
+    background: #fff;
+    border-left: 1px #ccc solid;
+    border-right: 1px #ccc solid;
     display: flex;
     flex-direction: column;
     height: 100vh;
-    margin: 0;
+    margin: 0 auto;
+    max-width: 800px;
 }
 
 .results {
