@@ -33,6 +33,7 @@ executable abacus
     either-unwrap ^>= 1.1,
     file-embed ^>= 0.0.11,
     jsaddle ^>= 0.9,
+    lens ^>= 4.18,
     parsec ^>= 3.1,
     reflex-dom ^>= 0.5,
     text ^>= 1.2,

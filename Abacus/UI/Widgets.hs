@@ -15,6 +15,7 @@ import Abacus.Core.Parser
 import Abacus.Core.Utils
 import qualified Abacus.UI.History as History
 import qualified Abacus.UI.TeX as TeX
+import Control.Lens ((^.))
 import Control.Monad
 import Data.Either.Unwrap
 import Data.FileEmbed
@@ -36,10 +37,13 @@ newtype SubmitOutput = SubmitOutput (Environment, Maybe Double)
 type SubmitResult = Either InterpretError (SubmitInput, SubmitOutput)
 
 mainWidget :: JSM ()
-mainWidget = void $ do
+mainWidget = do
     _ <- eval $ decodeUtf8 $(embedFile "node_modules/katex/dist/katex.min.js")
     mainWidgetWithHead headElement bodyElement
-    eval ("document.querySelector(\".input input\").focus();" :: String)
+    jsg ("document" :: String)
+        ^. js1 ("querySelector" :: String) (".input input" :: String)
+        ^. js0 ("focus" :: String)
+    return ()
 
 headElement :: MonadWidget t m => m ()
 headElement = do
