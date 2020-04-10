@@ -11,8 +11,11 @@ module Abacus.UI.Widgets
 where
 
 import Abacus.Core.Interpreter
+import Abacus.Core.Parser
 import Abacus.Core.Utils
 import qualified Abacus.UI.History as History
+import qualified Abacus.UI.TeX as TeX
+import Data.Either.Unwrap
 import Data.FileEmbed
 import qualified Data.Map as Map
 import Data.Text (Text)
@@ -57,7 +60,6 @@ resultList submitted = elClass "div" "results" $ el "dl" $ do
     _ <- listHoldWithKey Map.empty resultsWithKey $ \_ result -> do
         dt <- fst <$> el' "dt" blank
         dd <- fst <$> el' "dd" blank
-        -- TODO: Use the TeX module to convert the input statement to TeX.
         _ <- katex dt $ input result
         _ <- katex dd $ output result
         return ()
@@ -67,7 +69,8 @@ resultList submitted = elClass "div" "results" $ el "dl" $ do
             (\n r -> (succ n, Map.singleton n $ Just r))
             (0 :: Integer)
             (filterRight submitted)
-        input (SubmitInput i, _) = i <> " ="
+        input (SubmitInput i, _) =
+            (TeX.fromStatement $ fromRight $ parse $ Text.unpack i) ++ " ="
         output (_, SubmitOutput (_, o)) = maybe "" showWithoutTrailingZero o
         katex e t = liftJSM $ do
             options <- obj
