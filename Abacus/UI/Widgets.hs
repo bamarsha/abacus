@@ -90,7 +90,7 @@ inputBox = elClass "div" "input" $ mdo
             (_textInput_input input)
         }
     clicked <- button "="
-    let submitted = evalInput <$> tagPromptlyDyn
+    submitted <- mapAccum_ evalInput defaultEnv $ tagPromptlyDyn
             (_textInput_value input)
             (clicked <> keypress Enter input)
     historyChanged <- accum (&) (History.singleton "") $ leftmost
@@ -102,10 +102,9 @@ inputBox = elClass "div" "input" $ mdo
         ]
     return submitted
     where
-        -- TODO: Save the environment returned by evalString.
-        evalInput i = (SubmitInput i, ) . SubmitOutput <$> evalString
-            defaultEnv
-            (Text.unpack i)
+        evalInput env input = case evalString env $ Text.unpack input of
+            Left error -> (env, Left error)
+            Right (env', value) -> (env', Right (SubmitInput input, SubmitOutput (env', value)))
         submitHistory i h
             | Text.null latest = History.amend i h' & History.insert ""
             | i == latest      = History.insert "" h'
