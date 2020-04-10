@@ -67,7 +67,7 @@ resultList submitted = elClass "div" "results" $ el "dl" $ do
         (\n r -> (succ n, Map.singleton n $ Just r))
         (0 :: Integer)
         (filterRight submitted)
-    input (SubmitInput i, _) = i
+    input (SubmitInput i, _) = i <> " ="
     output (_, SubmitOutput (_, o)) = maybe "" showWithoutTrailingZero o
     katex e t = liftJSM $ do
         options <- obj
