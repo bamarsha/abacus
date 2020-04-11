@@ -4,15 +4,20 @@
 
 Abacus is a calculator with a small math language that supports user-defined
 variables and functions.
+[**Try it out!**](https://samarsha.github.io/abacus/)
 
-Building Abacus is a little complicated.  You need
-[GHC](https://www.haskell.org/ghc/), [Cabal](https://www.haskell.org/cabal/),
-and [npm](https://www.npmjs.com/) installed.  Then run:
+## Building Abacus
 
-    cabal new-build
-    npm install
-    npm start        # to run directly from the repository
-    npm run package  # to create an executable package
+Abacus uses Haskell with [Reflex FRP](https://github.com/reflex-frp/reflex).
+I recommend building Abacus with [GHCJS](https://github.com/ghcjs/ghcjs).
+Here's how, assuming you have GHCJS installed:
 
-You can also run a command-line version of Abacus using `cabal new-run
-abacus-console`.
+```
+npm install
+cabal v2-build --ghcjs
+```
+
+This should create the folder `dist-newstyle/build/*/*/*/build/abacus/abacus.jsexe`, where the `*`'s depend on your system.
+Open `index.html` in that folder in a web browser.
+
+If you use Visual Studio Code, this repository uses a dev container that comes with GHCJS.
