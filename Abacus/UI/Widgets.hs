@@ -16,7 +16,6 @@ import Abacus.Core.Utils
 import qualified Abacus.UI.History as History
 import qualified Abacus.UI.TeX as TeX
 import Control.Lens ((^.))
-import Control.Monad
 import Data.Either.Unwrap
 import Data.FileEmbed
 import qualified Data.Map as Map
@@ -52,13 +51,13 @@ headElement = do
 
 bodyElement :: MonadWidget t m => m ()
 bodyElement = mdo
-    errorBox submitted
     resultList submitted
+    errorBox submitted
     submitted <- inputBox
     return ()
 
 errorBox :: MonadWidget t m => Event t SubmitResult -> m ()
-errorBox submitted = el "div" $ holdDyn "" errorResult >>= dynText
+errorBox submitted = elClass "div" "error" $ holdDyn "" errorResult >>= dynText
     where errorResult = Text.pack . either show (const "") <$> submitted
 
 resultList :: MonadWidget t m => Event t SubmitResult -> m ()

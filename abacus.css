@@ -72,6 +72,16 @@ body {
     text-align: right;
 }
 
+.error {
+    background-color: #fffda4;
+    border-top: 3px #ffcb00 solid;
+    font-family: sans-serif;
+    padding: 10px;
+}
+.error:empty {
+    display: none;
+}
+
 .input {
     border-top: 3px solid #ff0052;
     display: flex;
