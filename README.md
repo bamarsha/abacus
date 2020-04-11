@@ -8,7 +8,7 @@ variables and functions.
 
 ## Building Abacus
 
-Abacus uses Haskell with [Reflex FRP](https://github.com/reflex-frp/reflex).
+Abacus uses Haskell with [Reflex](https://github.com/reflex-frp/reflex).
 I recommend building Abacus with [GHCJS](https://github.com/ghcjs/ghcjs).
 Here's how, assuming you have GHCJS installed:
 
