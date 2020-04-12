@@ -119,7 +119,9 @@ showRational n = signStr ++ integerStr ++ if null fractionStr then "" else "." +
   where
     (scientific, repetend) = fromRationalRepetendUnlimited n
     (coefficient, magnitude) = toDecimalDigits $ abs scientific
-    (integer, fraction) = splitAt magnitude coefficient
+    (integer, fraction)
+        | magnitude < 0 = ([], replicate (abs magnitude) 0 ++ coefficient)
+        | otherwise     = splitAt magnitude coefficient
     signStr
         | scientific < 0 = "-"
         | otherwise      = ""
