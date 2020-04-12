@@ -1,17 +1,15 @@
 module Abacus.UI.History
     ( History
-    , singleton
     , present
+    , singleton
     , back
     , forward
     , end
     , insert
     , amend
-    )
-where
+    ) where
 
--- Holds a non-empty sequence of events partitioned into past, present, and
--- future.
+-- Holds a non-empty sequence of events partitioned into past, present, and future.
 data History a = History
     { past :: [a]
     , present :: a
@@ -22,8 +20,7 @@ data History a = History
 singleton :: a -> History a
 singleton x = History { past = [], present = x, future = [] }
 
--- Moves back one event, or does nothing if the history is already at the
--- beginning.
+-- Moves back one event, or does nothing if the history is already at the beginning.
 back :: History a -> History a
 back h@History { past = [] } = h
 back History { past = p : ps, present = x, future = fs } = History
@@ -32,8 +29,7 @@ back History { past = p : ps, present = x, future = fs } = History
     , future = x : fs
     }
 
--- Moves forward one event, or does nothing if the history is already at the
--- end.
+-- Moves forward one event, or does nothing if the history is already at the end.
 forward :: History a -> History a
 forward h@History { future = [] } = h
 forward History { past = ps, present = x, future = f : fs } = History
@@ -51,8 +47,7 @@ end h = History
     , future = []
     }
 
--- Inserts an event after the present event, and moves history forward to the
--- new event.
+-- Inserts an event after the present event, and moves history forward to the new event.
 insert :: a -> History a -> History a
 insert x h = History
     { past = present h : past h

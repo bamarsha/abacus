@@ -4,8 +4,7 @@
 
 module Abacus.UI.Window
     ( run
-    )
-where
+    ) where
 
 import Language.Javascript.JSaddle.Types
 
@@ -17,13 +16,14 @@ run = id
 #else
 
 import Control.Concurrent
-import qualified Data.Text as Text
 import GI.GLib
 import GI.Gtk hiding (init, main)
-import qualified GI.Gtk as Gtk (init, main)
 import GI.WebKit2
 import Language.Javascript.JSaddle.WebKitGTK hiding (run)
 import System.Directory
+
+import qualified Data.Text as Text
+import qualified GI.Gtk as Gtk (init, main)
 
 run :: JSM () -> IO ()
 run mainWidget = do
@@ -61,10 +61,10 @@ loadMainWidget webView mainWidget finished = do
         _ -> return ()
     indexUrl <- getIndexUrl
     webViewLoadHtml webView indexHtml $ Just indexUrl
-    where
-        indexHtml = "<!DOCTYPE html><html><head></head><body></body></html>"
-        getIndexUrl = do
-            dir <- getCurrentDirectory
-            return $ "file://" <> Text.pack dir <> "/index.html"
+  where
+    indexHtml = "<!DOCTYPE html><html><head></head><body></body></html>"
+    getIndexUrl = do
+        dir <- getCurrentDirectory
+        return $ "file://" <> Text.pack dir <> "/index.html"
 
 #endif

@@ -16,7 +16,7 @@ intersperseWhen :: ((a, a) -> Bool) -> a -> [a] -> [a]
 intersperseWhen _ _ [] = []
 intersperseWhen f sep (x1 : x2 : xs)
     | f (x1, x2) = x1 : sep : intersperseWhen f sep (x2 : xs)
-    | otherwise = x1 : intersperseWhen f sep (x2 : xs)
+    | otherwise  = x1 : intersperseWhen f sep (x2 : xs)
 intersperseWhen _ _ [x] = [x]
 
 -- Replaces the sublist from start to end in xs with ys.
