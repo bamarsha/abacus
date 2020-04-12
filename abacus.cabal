@@ -16,15 +16,15 @@ custom-setup
 executable abacus
   main-is: Main.hs
   other-modules:
+    Abacus.Gui.History,
+    Abacus.Gui.TeX,
+    Abacus.Gui.Widgets,
+    Abacus.Gui.Window,
     Abacus.Interpreter.Ast,
     Abacus.Interpreter.Eval,
     Abacus.Interpreter.Parser,
     Abacus.Interpreter.Token,
-    Abacus.Interpreter.Utils,
-    Abacus.UI.History,
-    Abacus.UI.TeX,
-    Abacus.UI.Widgets,
-    Abacus.UI.Window
+    Abacus.Interpreter.Utils
   build-depends:
     base >= 4.11,
     containers ^>= 0.6,

@@ -4,7 +4,7 @@
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE TemplateHaskell #-}
 
-module Abacus.UI.Widgets
+module Abacus.Gui.Widgets
     ( calculator
     ) where
 
@@ -23,8 +23,8 @@ import qualified Data.Map as Map
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 
-import qualified Abacus.UI.History as History
-import qualified Abacus.UI.TeX as TeX
+import qualified Abacus.Gui.History as History
+import qualified Abacus.Gui.TeX as TeX
 
 newtype SubmitInput = SubmitInput Text
 

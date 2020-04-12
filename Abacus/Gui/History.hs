@@ -1,4 +1,4 @@
-module Abacus.UI.History
+module Abacus.Gui.History
     ( History
     , present
     , singleton

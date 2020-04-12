@@ -2,7 +2,7 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Abacus.UI.Window
+module Abacus.Gui.Window
     ( run
     ) where
 

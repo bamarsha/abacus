@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Abacus.UI.TeX
+module Abacus.Gui.TeX
     ( showStatement
     , showRational
     ) where
