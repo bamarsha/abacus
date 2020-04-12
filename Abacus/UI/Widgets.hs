@@ -16,8 +16,8 @@ import Data.Text (Text)
 import Language.Javascript.JSaddle
 import Reflex.Dom
 
-import Abacus.Core.Interpreter
-import Abacus.Core.Parser
+import Abacus.Interpreter.Eval
+import Abacus.Interpreter.Parser
 
 import qualified Data.Map as Map
 import qualified Data.Text as Text
@@ -30,7 +30,7 @@ newtype SubmitInput = SubmitInput Text
 
 newtype SubmitOutput = SubmitOutput (Environment, Maybe Rational)
 
-type SubmitResult = Either InterpreterError (SubmitInput, SubmitOutput)
+type SubmitResult = Either EvalError (SubmitInput, SubmitOutput)
 
 calculator :: JSM ()
 calculator = do

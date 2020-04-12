@@ -1,4 +1,4 @@
-module Abacus.Core.Utils
+module Abacus.Interpreter.Utils
     ( intersperseWhen
     , replaceSublist
     ) where

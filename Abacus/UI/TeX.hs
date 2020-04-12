@@ -9,7 +9,7 @@ import Data.List
 import Data.Scientific (fromRationalRepetendUnlimited, toDecimalDigits)
 import Text.Printf
 
-import Abacus.Core.Ast
+import Abacus.Interpreter.Ast
 
 -- A math operator corresponding to a node in the AST.
 data Operator

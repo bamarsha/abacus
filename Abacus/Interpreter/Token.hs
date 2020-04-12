@@ -1,4 +1,4 @@
-module Abacus.Core.Token
+module Abacus.Interpreter.Token
     ( Token(..)
     , tokenize
     ) where

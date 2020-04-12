@@ -1,4 +1,4 @@
-module Abacus.Core.Ast
+module Abacus.Interpreter.Ast
     ( Expression(..)
     , Statement(..)
     ) where

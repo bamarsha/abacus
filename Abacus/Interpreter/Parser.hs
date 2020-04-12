@@ -1,6 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Abacus.Core.Parser
+module Abacus.Interpreter.Parser
     ( parseStatement
     ) where
 
@@ -8,10 +8,10 @@ import Data.Functor.Identity
 import Text.Parsec
 import Text.Parsec.Expr
 
-import Abacus.Core.Token
-import Abacus.Core.Utils
+import Abacus.Interpreter.Token
+import Abacus.Interpreter.Utils
 
-import qualified Abacus.Core.Ast as Ast
+import qualified Abacus.Interpreter.Ast as Ast
 
 -- The table of math operators.
 table :: OperatorTable [Token] () Identity Ast.Expression
