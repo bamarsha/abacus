@@ -1,14 +1,7 @@
 module Abacus.Core.Utils
-    ( showWithoutTrailingZero
-    , intersperseWhen
+    ( intersperseWhen
     , replaceSublist
     ) where
-
--- Shows a decimal number without the trailing zero for whole numbers.
-showWithoutTrailingZero :: Show a => a -> String
-showWithoutTrailingZero num = if fraction == ".0" then integer else integer ++ fraction
-  where
-    (integer, fraction) = break (== '.') $ show num
 
 -- intersperseWhen f sep xs inserts sep between each pair of elements in xs only when f returns True
 -- for that pair.

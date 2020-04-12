@@ -16,10 +16,10 @@ custom-setup
 executable abacus
   main-is: Main.hs
   other-modules:
-    Abacus.Core.AST,
+    Abacus.Core.Ast,
     Abacus.Core.Interpreter,
     Abacus.Core.Parser,
-    Abacus.Core.Tokenizer,
+    Abacus.Core.Token,
     Abacus.Core.Utils,
     Abacus.UI.History,
     Abacus.UI.TeX,
@@ -36,7 +36,9 @@ executable abacus
     jsaddle ^>= 0.9,
     lens ^>= 4.18,
     parsec ^>= 3.1,
+    parsec3-numbers ^>= 0.1,
     reflex-dom ^>= 0.5,
+    scientific ^>= 0.3,
     text ^>= 1.2,
     text-format ^>= 0.3
   default-language: Haskell2010

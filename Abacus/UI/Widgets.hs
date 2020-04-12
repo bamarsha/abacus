@@ -18,7 +18,6 @@ import Reflex.Dom
 
 import Abacus.Core.Interpreter
 import Abacus.Core.Parser
-import Abacus.Core.Utils
 
 import qualified Data.Map as Map
 import qualified Data.Text as Text
@@ -29,7 +28,7 @@ import qualified Abacus.UI.TeX as TeX
 
 newtype SubmitInput = SubmitInput Text
 
-newtype SubmitOutput = SubmitOutput (Environment, Maybe Double)
+newtype SubmitOutput = SubmitOutput (Environment, Maybe Rational)
 
 type SubmitResult = Either InterpreterError (SubmitInput, SubmitOutput)
 
@@ -72,9 +71,9 @@ resultList submitted = elClass "div" "results" $ el "dl" $ do
         (0 :: Integer)
         (filterRight submitted)
     input (SubmitInput txt, SubmitOutput (_, result)) =
-        (TeX.fromStatement $ fromRight $ parseStatement $ Text.unpack txt)
+        (TeX.showStatement $ fromRight $ parseStatement $ Text.unpack txt)
             ++ if isJust result then " =" else ""
-    output (_, SubmitOutput (_, result)) = maybe "" showWithoutTrailingZero result
+    output (_, SubmitOutput (_, result)) = maybe "" TeX.showRational result
     renderKatex txt target = liftJSM $ do
         options <- obj
         options <# ("throwOnError" :: String) $ False

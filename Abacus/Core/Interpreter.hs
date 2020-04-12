@@ -12,8 +12,9 @@ module Abacus.Core.Interpreter
 import Data.Either.Combinators
 import Data.List.Extra
 import Data.Maybe
+import Data.Ratio
 
-import Abacus.Core.AST
+import Abacus.Core.Ast
 import Abacus.Core.Parser
 
 -- Maps names to functions that can be called by other expressions.
@@ -25,9 +26,9 @@ data Function
     -- parameter names to add to the environment when the function is called.
     = Closure Environment [String] Expression
     -- A native Haskell function with one parameter.
-    | Native1 (Double -> Double)
+    | Native1 (Rational -> Rational)
     -- A native Haskell function with two parameters.
-    | Native2 (Double -> Double -> Double)
+    | Native2 (Rational -> Rational -> Rational)
 
 -- An interpreter error.
 data InterpreterError
@@ -39,33 +40,38 @@ instance Show InterpreterError where
     show (ParseError message) = "Parse Error " ++ replace "\n" " " message
 
 -- An interpreter result.
-type InterpreterResult = Either InterpreterError (Environment, Maybe Double)
+type InterpreterResult = Either InterpreterError (Environment, Maybe Rational)
 
 -- The default environment.
 defaultEnv :: Environment
 defaultEnv = Environment
-    [ ("^", Native2 (**))
+    [ ("^", Native2 power)
     , ("neg", Native1 negate)
     , ("*", Native2 (*))
     , ("/", Native2 (/))
     , ("+", Native2 (+))
     , ("-", Native2 (-))
-    , ("pi", constant pi)
-    , ("e", constant (exp 1))
-    , ("sin", Native1 sin)
-    , ("cos", Native1 cos)
-    , ("tan", Native1 tan)
-    , ("sqrt", Native1 sqrt)
-    , ("cbrt", function ["x"] $ Call "root" [Call "x" [], Number 3.0])
-    , ("root", function ["x", "k"] $ Call "^" [Call "x" [], Call "/" [Number 1.0, Call "k" []]])
-    , ("ln", Native1 log)
-    , ("log", function ["b", "x"] $ Call "/" [Call "ln" [Call "x" []], Call "ln" [Call "b" []]])
-    , ("log2", function ["x"] $ Call "log" [Number 2.0, Call "x" []])
-    , ("log10", function ["x"] $ Call "log" [Number 10.0, Call "x" []])
+    , ("pi", constant $ toRational pi)
+    , ("e", constant $ toRational $ exp 1)
+    , ("sin", Native1 $ toRational . sin . fromRational)
+    , ("cos", Native1 $ toRational . cos . fromRational)
+    , ("tan", Native1 $ toRational . tan . fromRational)
+    , ("sqrt", Native1 $ toRational . sqrt . fromRational)
+    , ("cbrt", function ["x"] $ Call "root" [Call "x" [], Number 3])
+    , ("root", function ["x", "base"] $ Call "^" [Call "x" [], Call "/" [Number 1, Call "base" []]])
+    , ("ln", Native1 $ toRational . log . fromRational)
+    , ("log", function ["base", "x"] $ Call "/" [ Call "ln" [Call "x" []]
+                                                , Call "ln" [Call "base" []] ])
+    , ("log2", function ["x"] $ Call "log" [Number 2, Call "x" []])
+    , ("log10", function ["x"] $ Call "log" [Number 10, Call "x" []])
     ]
+  where
+    power x y
+        | denominator y == 1 = x ^^ numerator y
+        | otherwise          = toRational $ fromRational x ** fromRational y
 
 -- A constant function.
-constant :: Double -> Function
+constant :: Rational -> Function
 constant = Closure (Environment []) [] . Number
 
 -- A function enclosed by the default environment.
@@ -73,7 +79,7 @@ function :: [String] -> Expression -> Function
 function = Closure defaultEnv
 
 -- Evaluates an expression in the given environment.
-evalExpression :: Environment -> Expression -> Either InterpreterError Double
+evalExpression :: Environment -> Expression -> Either InterpreterError Rational
 evalExpression env = \case
     Number n -> return n
     Call name args -> case (args, lookup name $ unEnvironment env) of

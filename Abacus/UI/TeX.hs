@@ -1,14 +1,15 @@
 {-# LANGUAGE LambdaCase #-}
 
 module Abacus.UI.TeX
-    ( fromStatement
+    ( showStatement
+    , showRational
     ) where
 
 import Data.List
+import Data.Scientific (fromRationalRepetendUnlimited, toDecimalDigits)
 import Text.Printf
 
-import Abacus.Core.AST
-import Abacus.Core.Utils
+import Abacus.Core.Ast
 
 -- A math operator corresponding to a node in the AST.
 data Operator
@@ -49,8 +50,8 @@ commutative Plus = True
 commutative _ = False
 
 -- Transforms an expression into TeX.
-fromExpression :: Maybe Operator -> Maybe Side -> Expression -> String
-fromExpression parent side = \case
+showExpression :: Maybe Operator -> Maybe Side -> Expression -> String
+showExpression parent side = \case
     Call "^" [base, power] -> binary (Just Exponent) "%s^{%s}" base power
     Call "neg" [x] -> unary (Just Negative) "-%s" x
     Call "*" [x, y] -> binary (Just Times) "%s \\cdot %s" x y
@@ -68,27 +69,27 @@ fromExpression parent side = \case
     Call "log2" [x] -> unary Nothing "\\log_2 \\left( %s \\right)" x
     Call "log10" [x] -> unary Nothing "\\log_{10} \\left( %s \\right)" x
     Call name args ->
-        let args' = intercalate "," $ map (fromExpression Nothing Nothing) args
+        let args' = intercalate "," $ map (showExpression Nothing Nothing) args
         in identifier name ++ if null args' then "" else parens args'
-    Number value -> showWithoutTrailingZero value
+    Number value -> showRational value
   where
-    unary op format x = printf format $ fromExpression op Nothing x
+    unary op format x = printf format $ showExpression op Nothing x
     binary op format x y = contextualParens parent side op $ printf format x' y'
       where
-        x' = fromExpression op (Just LeftSide) x
-        y' = fromExpression op (Just RightSide) y
+        x' = showExpression op (Just LeftSide) x
+        y' = showExpression op (Just RightSide) y
 
 -- Transforms a statement into TeX.
-fromStatement :: Statement -> String
-fromStatement (Expression expr) = fromExpression Nothing Nothing expr
-fromStatement (Binding name [] expr) =
-    fromExpression Nothing Nothing (Call name [])
+showStatement :: Statement -> String
+showStatement (Expression expr) = showExpression Nothing Nothing expr
+showStatement (Binding name [] expr) =
+    showExpression Nothing Nothing (Call name [])
         ++ "\\leftarrow "
-        ++ fromExpression Nothing Nothing expr
-fromStatement (Binding name params expr) =
-    fromExpression Nothing Nothing (Call name $ map (\param -> Call param []) params)
+        ++ showExpression Nothing Nothing expr
+showStatement (Binding name params expr) =
+    showExpression Nothing Nothing (Call name $ map (\param -> Call param []) params)
         ++ "="
-        ++ fromExpression Nothing Nothing expr
+        ++ showExpression Nothing Nothing expr
 
 -- Formats an identifier as a TeX string.
 identifier :: String -> String
@@ -111,3 +112,20 @@ contextualParens (Just parent) side (Just child)
     wrongPrecedence = precedence parent > precedence child
     wrongAssociativity = precedence parent == precedence child && associativity parent /= side
 contextualParens _ _ _ = id
+
+-- Shows a rational as a decimal number.
+showRational :: Rational -> String
+showRational n = integerStr ++ if null fractionStr then "" else "." ++ fractionStr
+  where
+    (scientific, repetend) = fromRationalRepetendUnlimited n
+    (coefficient, magnitude) = toDecimalDigits scientific
+    (integer, fraction) = splitAt magnitude coefficient
+    integerStr
+        | null integer = "0"
+        | otherwise    = integer >>= show
+    fractionStr = case (fraction, repetend) of
+        ([], _) -> ""
+        (_, Just start) ->
+            let (before, after) = splitAt start fraction
+            in printf "%s\\overline{%s}" (before >>= show) (after >>= show)
+        (_, Nothing) -> fraction >>= show

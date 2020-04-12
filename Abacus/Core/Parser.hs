@@ -8,12 +8,13 @@ import Data.Functor.Identity
 import Text.Parsec
 import Text.Parsec.Expr
 
-import Abacus.Core.AST
-import Abacus.Core.Tokenizer
+import Abacus.Core.Token
 import Abacus.Core.Utils
 
+import qualified Abacus.Core.Ast as Ast
+
 -- The table of math operators.
-table :: OperatorTable [Token] () Identity Expression
+table :: OperatorTable [Token] () Identity Ast.Expression
 table =
     [ [ Infix negativeExponent AssocRight
       , Infix (operator "^" >> return (call2 "^")) AssocRight
@@ -32,12 +33,12 @@ table =
         operator "^" >> operator "-" >> return (\base -> call2 "^" base . call1 "neg")
 
 -- Returns a Call expression with one argument.
-call1 :: String -> Expression -> Expression
-call1 name x = Call name [x]
+call1 :: String -> Ast.Expression -> Ast.Expression
+call1 name x = Ast.Call name [x]
 
 -- Returns a Call expression with two arguments.
-call2 :: String -> Expression -> Expression -> Expression
-call2 name x y = Call name [x, y]
+call2 :: String -> Ast.Expression -> Ast.Expression -> Ast.Expression
+call2 name x y = Ast.Call name [x, y]
 
 -- The parser satisfyToken f succeeds for any token for which the given function f returns True.
 -- Returns the token that is actually parsed.
@@ -59,9 +60,9 @@ identifier = satisfyToken $ \case
     _ -> Nothing
 
 -- The parser for a number. Returns the number as an Expression.
-number :: Parsec [Token] () Expression
+number :: Parsec [Token] () Ast.Expression
 number = satisfyToken $ \case
-    NumberToken n -> Just $ Number n
+    Number n -> Just $ Ast.Number n
     _ -> Nothing
 
 -- parens p parses p enclosed in parentheses, returning the value of p.
@@ -69,11 +70,11 @@ parens :: ParsecT [Token] () Identity a -> ParsecT [Token] () Identity a
 parens = between (symbol "(") (symbol ")")
 
 -- The expression parser.
-expression :: ParsecT [Token] () Identity Expression
+expression :: ParsecT [Token] () Identity Ast.Expression
 expression = buildExpressionParser table term
 
 -- The parser for terms in an expression.
-term :: ParsecT [Token] () Identity Expression
+term :: ParsecT [Token] () Identity Ast.Expression
 term = parens expression <|> number <|> call
 
 -- The parser for lists. It tries to apply the given parser until it fails, with each application of
@@ -82,32 +83,32 @@ list :: ParsecT [Token] () Identity a -> ParsecT [Token] () Identity [a]
 list parser = (:) <$> parser <*> option [] (symbol "," >> list parser)
 
 -- The parser for a function call.
-call :: ParsecT [Token] () Identity Expression
+call :: ParsecT [Token] () Identity Ast.Expression
 call = do
     name <- identifier
     args <- option [] (parens $ list expression)
-    return $ Call name args
+    return $ Ast.Call name args
 
 -- The parser for a function binding.
-binding :: ParsecT [Token] () Identity Statement
+binding :: ParsecT [Token] () Identity Ast.Statement
 binding = do
     name <- identifier
     params <- option [] (parens $ list identifier)
     symbol "="
-    Binding name params <$> expression
+    Ast.Binding name params <$> expression
 
 -- The parser for a statement.
-statement :: ParsecT [Token] () Identity Statement
-statement = try binding <|> Expression <$> expression
+statement :: ParsecT [Token] () Identity Ast.Statement
+statement = try binding <|> Ast.Expression <$> expression
 
 -- The parser for a complete stream of input.
-input :: ParsecT [Token] () Identity Statement
+input :: ParsecT [Token] () Identity Ast.Statement
 input = do
     s <- statement
     s <$ eof
 
 -- Parses a statement and returns either a ParseError (Left) or the parsed Statement (Right).
-parseStatement :: String -> Either ParseError Statement
+parseStatement :: String -> Either ParseError Ast.Statement
 parseStatement str = case tokenize "" str of
     Left err -> Left err
     Right toks -> parse input "" $ explicitMultiplication toks
@@ -120,10 +121,10 @@ explicitMultiplication = intersperseWhen isImplicitMultiplication $ Operator "*"
     isImplicitMultiplication :: (Token, Token) -> Bool
     isImplicitMultiplication = \case
         (Identifier _, Identifier _) -> True
-        (NumberToken _, Identifier _) -> True
-        (NumberToken _, Symbol "(") -> True
+        (Number _, Identifier _) -> True
+        (Number _, Symbol "(") -> True
         (Symbol ")", Identifier _) -> True
-        (Symbol ")", NumberToken _) -> True
+        (Symbol ")", Number _) -> True
         (Symbol ")", Symbol "(") -> True
         -- The parser can't tell if this is multiplication or a function call since it depends on
         -- the environment.
