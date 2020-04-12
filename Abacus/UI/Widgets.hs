@@ -33,7 +33,7 @@ newtype SubmitInput = SubmitInput Text
 
 newtype SubmitOutput = SubmitOutput (Environment, Maybe Double)
 
-type SubmitResult = Either InterpretError (SubmitInput, SubmitOutput)
+type SubmitResult = Either InterpreterError (SubmitInput, SubmitOutput)
 
 mainWidget :: JSM ()
 mainWidget = do
@@ -76,7 +76,7 @@ resultList submitted = elClass "div" "results" $ el "dl" $ do
             (0 :: Integer)
             (filterRight submitted)
         input (SubmitInput text, SubmitOutput (_, value)) =
-            (TeX.fromStatement $ fromRight $ parse $ Text.unpack text)
+            (TeX.fromStatement $ fromRight $ parseStatement $ Text.unpack text)
                 ++ if isJust value then " =" else ""
         output (_, SubmitOutput (_, value)) =
             maybe "" showWithoutTrailingZero value

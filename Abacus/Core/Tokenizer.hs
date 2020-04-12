@@ -1,22 +1,19 @@
 module Abacus.Core.Tokenizer
     ( Token(..)
     , tokenize
-    )
-where
+    ) where
 
 import Control.Applicative (empty)
 import Data.Functor.Identity
-import Text.Parsec.Combinator
-import Text.Parsec.Error
+import Text.Parsec
 import Text.Parsec.Language
-import Text.Parsec.Pos
-import Text.Parsec.Prim hiding (tokens)
-import qualified Text.Parsec.Token as PT
+
+import qualified Text.Parsec.Token as Parsec
 
 -- A token.
 data Token
     = Identifier String
-    | NumberT Double
+    | NumberToken Double
     | Operator String
     | Symbol String
     deriving (Eq, Show)
@@ -30,48 +27,41 @@ symbolNames :: [String]
 symbolNames = words "( ) , ="
 
 -- Parses tokens in a string.
-tokenParser :: PT.GenTokenParser String u Identity
-tokenParser =
-    PT.makeTokenParser
-        emptyDef
-            { PT.opStart = empty
-            , PT.opLetter = empty
-            , PT.reservedOpNames = operatorNames
-            }
+tokenParser :: Parsec.GenTokenParser String u Identity
+tokenParser = Parsec.makeTokenParser emptyDef
+    { Parsec.opStart = empty
+    , Parsec.opLetter = empty
+    , Parsec.reservedOpNames = operatorNames
+    }
 
 -- The parser for any operator token.
 operator :: Parsec String () Token
-operator =
-    choice $
-    map (\o -> PT.reservedOp tokenParser o >> return (Operator o)) operatorNames
+operator = choice $
+    map (\op -> Parsec.reservedOp tokenParser op >> return (Operator op)) operatorNames
 
 -- The parser for any symbol token.
 symbol :: Parsec String () Token
-symbol =
-    choice $
-    map (\s -> PT.symbol tokenParser s >> return (Symbol s)) symbolNames
+symbol = choice $
+    map (\sym -> Parsec.symbol tokenParser sym >> return (Symbol sym)) symbolNames
 
 -- The parser for a function or variable identifier.
 identifier :: Parsec String () Token
-identifier = Identifier <$> PT.identifier tokenParser
+identifier = Identifier <$> Parsec.identifier tokenParser
 
--- The parser for a number token. It accepts both naturals and floats, but
--- naturals are converted to floats.
+-- The parser for a number token. It accepts both naturals and floats, but naturals are converted to
+-- floats.
 number :: Parsec String () Token
-number = alwaysFloat <$> PT.naturalOrFloat tokenParser
-    where
-        alwaysFloat :: Either Integer Double -> Token
-        alwaysFloat (Left n) = NumberT (fromIntegral n)
-        alwaysFloat (Right f) = NumberT f
+number = alwaysFloat <$> Parsec.naturalOrFloat tokenParser
+  where
+    alwaysFloat (Left natural) = NumberToken (fromIntegral natural)
+    alwaysFloat (Right float) = NumberToken float
 
--- The parser for taking a complete string of math and returning a list of
--- tokens.
-tokens :: Parsec String () [Token]
-tokens = do
-    t <- many $ operator <|> symbol <|> identifier <|> number
-    t <$ eof
+-- Parses all of the tokens in the string.
+allTokens :: Parsec String () [Token]
+allTokens = do
+    toks <- many $ operator <|> symbol <|> identifier <|> number
+    toks <$ eof
 
--- Parses a string of math and returns either a ParseError (Left) or the list of
--- tokens in the string.
+-- Parses a string and returns either a ParseError (Left) or the list of tokens in the string.
 tokenize :: SourceName -> String -> Either ParseError [Token]
-tokenize = runParser tokens ()
+tokenize = runParser allTokens ()
