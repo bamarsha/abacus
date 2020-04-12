@@ -115,17 +115,20 @@ contextualParens _ _ _ = id
 
 -- Shows a rational as a decimal number.
 showRational :: Rational -> String
-showRational n = integerStr ++ if null fractionStr then "" else "." ++ fractionStr
+showRational n = signStr ++ integerStr ++ if null fractionStr then "" else "." ++ fractionStr
   where
     (scientific, repetend) = fromRationalRepetendUnlimited n
-    (coefficient, magnitude) = toDecimalDigits scientific
+    (coefficient, magnitude) = toDecimalDigits $ abs scientific
     (integer, fraction) = splitAt magnitude coefficient
+    signStr
+        | scientific < 0 = "-"
+        | otherwise      = ""
     integerStr
         | null integer = "0"
         | otherwise    = integer >>= show
     fractionStr = case (fraction, repetend) of
         ([], _) -> ""
-        (_, Just start) ->
-            let (before, after) = splitAt start fraction
+        (_, Just index) ->
+            let (before, after) = splitAt index fraction
             in printf "%s\\overline{%s}" (before >>= show) (after >>= show)
         (_, Nothing) -> fraction >>= show
