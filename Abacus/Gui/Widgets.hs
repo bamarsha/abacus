@@ -9,6 +9,7 @@ module Abacus.Gui.Widgets
     ) where
 
 import Control.Lens ((^.))
+import Control.Monad.IO.Class
 import Data.Either.Unwrap
 import Data.FileEmbed
 import Data.Maybe
@@ -35,7 +36,7 @@ type SubmitResult = Either EvalError (SubmitInput, SubmitOutput)
 calculator :: JSM ()
 calculator = do
     _ <- eval $ Text.decodeUtf8 $(embedFile "node_modules/katex/dist/katex.min.js")
-    mainWidgetWithHead headElement bodyElement
+    liftIO $ mainWidgetWithHead headElement bodyElement
     _ <- jsg ("document" :: String)
         ^. js1 ("querySelector" :: String) (".input input" :: String)
         ^. js0 ("focus" :: String)
