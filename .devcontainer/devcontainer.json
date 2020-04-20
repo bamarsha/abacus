@@ -1,5 +1,6 @@
 {
   "image": "clovyr/haskell-base-8.6.5",
+  "postCreateCommand": "apt update && apt install -y --no-install-recommends libgirepository1.0-dev libwebkit2gtk-4.0-dev",
   "extensions": [
     "justusadam.language-haskell"
   ]

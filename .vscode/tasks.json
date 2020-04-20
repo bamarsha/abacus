@@ -13,6 +13,12 @@
       }
     },
     {
+      "label": "cabal: repl",
+      "type": "shell",
+      "command": "cabal v2-repl",
+      "problemMatcher": []
+    },
+    {
       "label": "npm: install",
       "type": "shell",
       "command": "npm install",
