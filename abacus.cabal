@@ -19,7 +19,6 @@ executable abacus
     Abacus.Gui.History,
     Abacus.Gui.TeX,
     Abacus.Gui.Widgets,
-    Abacus.Gui.Window,
     Abacus.Interpreter.Ast,
     Abacus.Interpreter.Eval,
     Abacus.Interpreter.Parser,
@@ -41,11 +40,5 @@ executable abacus
     scientific,
     text,
     text-format
-  if !impl(ghcjs)
-    build-depends:
-      gi-glib,
-      gi-gtk,
-      gi-webkit2,
-      jsaddle-webkit2gtk
   default-language: Haskell2010
   ghc-options: -Wall

@@ -8,8 +8,6 @@ module Abacus.Gui.Widgets
     ( calculator
     ) where
 
-import Control.Lens ((^.))
-import Control.Monad.IO.Class
 import Data.Either.Unwrap
 import Data.FileEmbed
 import Data.Maybe
@@ -33,25 +31,23 @@ newtype SubmitOutput = SubmitOutput (Environment, Maybe Rational)
 
 type SubmitResult = Either EvalError (SubmitInput, SubmitOutput)
 
-calculator :: JSM ()
-calculator = do
-    _ <- eval $ Text.decodeUtf8 $(embedFile "node_modules/katex/dist/katex.min.js")
-    liftIO $ mainWidgetWithHead headElement bodyElement
-    _ <- jsg ("document" :: String)
-        ^. js1 ("querySelector" :: String) (".input input" :: String)
-        ^. js0 ("focus" :: String)
-    return ()
+calculator :: IO ()
+calculator = mainWidgetWithHead headElement bodyElement
 
 headElement :: MonadWidget t m => m ()
 headElement = do
     el "title" $ text "Abacus"
     el "style" $ text $ Text.decodeUtf8 $(embedFile "abacus.css")
+    _ <- liftJSM $ eval $ Text.decodeUtf8 $(embedFile "node_modules/katex/dist/katex.min.js")
+    return ()
 
 bodyElement :: MonadWidget t m => m ()
 bodyElement = mdo
     resultList submitted
     errorBox submitted
     submitted <- inputBox
+    _ <- liftJSM $ eval
+        ("setTimeout(() => document.querySelector('.input input').focus())" :: String)
     return ()
 
 errorBox :: MonadWidget t m => Event t SubmitResult -> m ()
