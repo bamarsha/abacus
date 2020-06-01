@@ -14,6 +14,7 @@ custom-setup
     filepath
 
 executable abacus
+  hs-source-dirs: src
   main-is: Main.hs
   other-modules:
     Abacus.Gui.History,
